@@ -85,7 +85,8 @@
                     <button onclick="document.getElementById('import-file').click()" class="p-2 text-gray-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar JSON">
                         <i data-lucide="upload" class="w-5 h-5"></i>
                     </button>
-                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(this)">
+                    <!-- Agregamos onclick para limpiar el valor y permitir seleccionar el mismo archivo si falló antes -->
+                    <input type="file" id="import-file" accept=".json" class="hidden" onclick="this.value=null" onchange="importData(this)">
                     
                     <button onclick="exportData()" class="p-2 text-gray-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Exportar JSON">
                         <i data-lucide="download" class="w-5 h-5"></i>
@@ -263,8 +264,7 @@
         // 2. CONFIGURACIÓN MANUAL (PARA GITHUB PAGES / LOCAL)
         else {
             // ⚠️ ⚠️ ⚠️ CONFIGURACIÓN OBLIGATORIA ⚠️ ⚠️ ⚠️
-            // Si ves un error de "Falta Configuración", DESCOMENTA las líneas de abajo
-            // y pega tu propia configuración de Firebase Console.
+            // Si ya lo configuraste, asegúrate de que esté descomentado (sin /* */).
             
             firebaseConfig = {
                 apiKey: "AIzaSyA6VgAkqZsxgntU-xp9lpVeLx4GXMv4V6A",
@@ -274,8 +274,7 @@
                 messagingSenderId: "71530448207",
                 appId: "1:71530448207:web:1d140e9a8f1a1a80c2713a"
             };
-            appId = "Bitahcora"; // Puedes cambiar esto si quieres
-            
+            appId = "mi-coleccion-manhwas";
         }
 
         // ==========================================
@@ -289,19 +288,11 @@
                     </div>
                     <h1 style="font-size:2rem;font-weight:bold;margin-bottom:1rem;">Falta Conectar Firebase</h1>
                     <p style="max-width:600px;margin-bottom:2rem;line-height:1.6;color:#94a3b8;">
-                        Estás ejecutando la bitácora fuera del entorno de prueba, por lo que necesita conectarse a tu propia base de datos.
+                        Estás ejecutando la bitácora fuera del entorno de prueba. Recuerda que debes pegar tu configuración en el archivo index.html.
                     </p>
-                    <div style="background:#1e293b;padding:1.5rem;border-radius:0.5rem;text-align:left;font-family:monospace;font-size:0.9rem;border:1px solid #334155;margin-bottom:2rem;width:100%;max-width:600px;overflow-x:auto;">
-                        <div style="color:#64748b;margin-bottom:0.5rem;">// Abre este archivo (index.html) y busca la línea ~280:</div>
-                        <span style="color:#c084fc">else</span> {<br>
-                        &nbsp;&nbsp;<span style="color:#22c55e">/* DESCOMENTA ESTO Y PEGA TUS DATOS */</span><br>
-                        &nbsp;&nbsp;<span style="color:#94a3b8">firebaseConfig = { ... }</span><br>
-                        }
-                    </div>
-                    <a href="https://console.firebase.google.com/" target="_blank" style="background:#2563eb;color:white;padding:0.75rem 1.5rem;border-radius:0.5rem;text-decoration:none;font-weight:bold;transition:all 0.2s;">Ir a Firebase Console</a>
                 </div>
             `;
-            throw new Error("Firebase Config Missing: Debes editar el archivo index.html y agregar tu configuración de Firebase.");
+            throw new Error("Firebase Config Missing.");
         }
 
         const app = initializeApp(firebaseConfig);
@@ -312,10 +303,9 @@
         // ESTADO GLOBAL
         // ==========================================
         let currentUser = null;
-        let allManhwas = []; // Copia completa de datos
-        let filteredManhwas = []; // Datos después de filtros/search/sort
+        let allManhwas = []; 
+        let filteredManhwas = []; 
         
-        // Estado de Filtros
         let state = {
             status: 'all',
             search: '',
@@ -328,7 +318,6 @@
         // FUNCIONES DE LÓGICA DE NEGOCIO
         // ==========================================
 
-        // Procesar datos (Filtrar -> Buscar -> Ordenar -> Paginación)
         function processData() {
             let result = [...allManhwas];
 
@@ -369,7 +358,6 @@
             const grid = document.getElementById('manhwa-grid');
             const emptyState = document.getElementById('empty-state');
             
-            // Paginación: Cortar el array
             const startIndex = (state.page - 1) * state.itemsPerPage;
             const endIndex = startIndex + state.itemsPerPage;
             const pageData = filteredManhwas.slice(startIndex, endIndex);
@@ -383,7 +371,6 @@
                 grid.classList.remove('hidden');
                 
                 grid.innerHTML = pageData.map(manhwa => {
-                    // Colores según estado
                     let statusConfig = { color: 'gray', label: '?' };
                     switch(manhwa.status) {
                         case 'leyendo': statusConfig = { color: 'green', label: 'Leyendo' }; break;
@@ -405,11 +392,7 @@
                             <img src="${manhwa.coverUrl || ''}" alt="${manhwa.title}" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                                  onerror="this.src='https://placehold.co/300x400/1e293b/94a3b8?text=Sin+Imagen'">
-                            
-                            <!-- Gradiente superpuesto -->
                             <div class="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-transparent to-transparent opacity-60"></div>
-                            
-                            <!-- Badge Estado -->
                             <div class="absolute top-2 right-2 px-2 py-1 rounded text-[10px] uppercase font-bold border ${borderColor} ${bgColor} ${textColor} backdrop-blur-md shadow-md">
                                 ${statusConfig.label}
                             </div>
@@ -417,38 +400,29 @@
 
                         <!-- CONTENIDO -->
                         <div class="p-4 flex flex-col flex-grow relative -mt-6 z-10">
-                            <!-- Título -->
                             <h3 class="text-lg font-bold text-white leading-tight mb-1 line-clamp-2 drop-shadow-md" title="${manhwa.title}">
                                 ${manhwa.title}
                             </h3>
-                            
-                            <!-- Calificación -->
                             <div class="flex items-center gap-1 text-yellow-400 text-xs font-bold mb-4">
                                 <i data-lucide="star" class="w-3 h-3 fill-current"></i>
                                 <span>${manhwa.rating || '-'}</span>
                             </div>
 
-                            <!-- MINI APARTADO DE CONTROL (FOOTER) -->
+                            <!-- CONTROL FOOTER -->
                             <div class="mt-auto pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                                
-                                <!-- Botón Eliminar Discreto -->
                                 <button onclick="window.deleteItem('${manhwa.id}')" 
                                         class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group/delete" title="Eliminar">
                                     <i data-lucide="trash-2" class="w-4 h-4 group-hover/delete:scale-110 transition-transform"></i>
                                 </button>
-
-                                <!-- Controlador de Capítulos Rápido -->
                                 <div class="flex items-center bg-dark-800 rounded-lg border border-dark-700 shadow-sm overflow-hidden">
                                     <button onclick="event.stopPropagation(); window.updateChapter('${manhwa.id}', ${currentChapter - 1})" 
                                             class="px-3 py-1.5 text-gray-400 hover:text-white hover:bg-dark-700 active:bg-dark-600 transition-colors border-r border-dark-700">
                                         <i data-lucide="minus" class="w-3 h-3"></i>
                                     </button>
-                                    
                                     <span class="px-2 py-1 text-xs font-mono text-brand-400 font-bold min-w-[3.5rem] text-center bg-dark-900/50 flex flex-col justify-center leading-none">
                                         <span class="text-[9px] text-gray-500 uppercase">Cap.</span>
                                         <span class="text-sm">${currentChapter}</span>
                                     </span>
-
                                     <button onclick="event.stopPropagation(); window.updateChapter('${manhwa.id}', ${currentChapter + 1})" 
                                             class="px-3 py-1.5 text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700 transition-colors">
                                         <i data-lucide="plus" class="w-3 h-3"></i>
@@ -467,7 +441,6 @@
             const totalPages = Math.ceil(filteredManhwas.length / state.itemsPerPage) || 1;
             const container = document.getElementById('pagination-controls');
             
-            // Asegurar que la página actual es válida
             if (state.page > totalPages) state.page = totalPages;
             if (state.page < 1) state.page = 1;
 
@@ -477,7 +450,6 @@
             document.getElementById('prev-page').disabled = state.page === 1;
             document.getElementById('next-page').disabled = state.page === totalPages;
 
-            // Mostrar/Ocultar paginación si es necesario
             if (totalPages > 1) {
                 container.classList.remove('hidden');
             } else {
@@ -486,14 +458,12 @@
         }
 
         // ==========================================
-        // EXPORTADAS A WINDOW (UI)
+        // HELPERS UI
         // ==========================================
 
         window.filterStatus = (status) => {
             state.status = status;
-            state.page = 1; // Resetear a pag 1
-            
-            // Update UI buttons
+            state.page = 1;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 const isSelected = btn.dataset.filter === status;
                 btn.className = isSelected 
@@ -517,14 +487,12 @@
         window.changePage = (direction) => {
             state.page += direction;
             processData();
-            // Scroll suave al top del grid
             document.getElementById('manhwa-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
         window.updateImagePreview = (url) => {
             const img = document.getElementById('image-preview');
             const placeholder = document.getElementById('image-placeholder');
-            
             if (url) {
                 img.src = url;
                 img.classList.remove('hidden');
@@ -539,11 +507,8 @@
 
         window.exportData = () => {
             if (!allManhwas.length) return alert("No hay datos para exportar.");
-            
-            // Limpiar datos internos de firebase antes de exportar
             const cleanData = allManhwas.map(({id, createdAt, ...rest}) => rest);
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanData));
-            
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", "manhwalog_backup.json");
@@ -552,8 +517,9 @@
             downloadAnchorNode.remove();
         };
 
+        // IMPORTACIÓN INTELIGENTE
         window.importData = (inputElement) => {
-            if (!currentUser) return alert("Debes estar conectado.");
+            if (!currentUser) return alert("Debes estar conectado para importar.");
             const file = inputElement.files[0];
             if (!file) return;
 
@@ -561,33 +527,52 @@
             reader.onload = async (e) => {
                 try {
                     const json = JSON.parse(e.target.result);
-                    if (!Array.isArray(json)) throw new Error("Formato inválido: Debe ser un array.");
+                    if (!Array.isArray(json)) throw new Error("El archivo no es una lista válida.");
 
-                    const confirmMsg = `Se encontraron ${json.length} elementos. ¿Deseas importarlos? Esto los agregará a tu lista actual.`;
+                    const confirmMsg = `Se encontraron ${json.length} elementos. ¿Importar?`;
                     if (!confirm(confirmMsg)) return;
 
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     
-                    let count = 0;
+                    let added = 0;
+                    let skipped = 0;
+
                     for (const item of json) {
-                        // Validación básica
-                        if (item.title) {
+                        // INTENTO DE MAPEO INTELIGENTE
+                        // Busca campos comunes en español e inglés
+                        const title = item.title || item.titulo || item.nombre || item.name || item.Title || item.Name;
+                        const cover = item.coverUrl || item.cover || item.image || item.img || item.imagen || item.portada || '';
+                        
+                        // Normalizar Estado
+                        let statusRaw = String(item.status || item.estado || 'pendiente').toLowerCase();
+                        let status = 'pendiente';
+                        if (statusRaw.includes('ley') || statusRaw.includes('read') || statusRaw.includes('viendo')) status = 'leyendo';
+                        else if (statusRaw.includes('comp') || statusRaw.includes('finish') || statusRaw.includes('termin')) status = 'completado';
+                        else if (statusRaw.includes('drop') || statusRaw.includes('aband')) status = 'drop';
+
+                        const rating = item.rating || item.nota || item.calificacion || item.score || 0;
+                        const chapter = item.chapter || item.capitulo || item.chap || 0;
+
+                        if (title) {
                             await addDoc(colRef, {
-                                title: item.title,
-                                coverUrl: item.coverUrl || '',
-                                status: item.status || 'pendiente',
-                                rating: item.rating || 0,
-                                chapter: item.chapter || 0,
+                                title: String(title),
+                                coverUrl: String(cover),
+                                status: status,
+                                rating: parseFloat(rating) || 0,
+                                chapter: parseInt(chapter) || 0,
                                 createdAt: serverTimestamp()
                             });
-                            count++;
+                            added++;
+                        } else {
+                            skipped++;
                         }
                     }
-                    alert(`${count} Manhwas importados correctamente.`);
-                    inputElement.value = ''; // Reset input
+                    alert(`Importación finalizada.\n✅ Agregados: ${added}\n⚠️ Omitidos (sin título): ${skipped}`);
                 } catch (err) {
                     console.error(err);
-                    alert("Error al leer el archivo JSON. Asegúrate de que el formato sea correcto.");
+                    alert("Error al leer el archivo. Verifica que sea un JSON válido.");
+                } finally {
+                    inputElement.value = ''; // Limpiar input
                 }
             };
             reader.readAsText(file);
@@ -596,7 +581,7 @@
         // --- CRUD BÁSICO ---
 
         window.updateChapter = async (id, newChapter) => {
-            if (newChapter < 0) return; // Prevenir capítulos negativos
+            if (newChapter < 0) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
                 await updateDoc(docRef, { chapter: newChapter });
@@ -635,7 +620,7 @@
                 });
                 closeModal();
                 form.reset();
-                window.updateImagePreview(''); // Reset preview
+                window.updateImagePreview('');
             } catch (error) {
                 alert("Error al guardar");
             }
@@ -665,16 +650,14 @@
                 currentUser = user;
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Conectado`;
                 
-                // Listener de Firestore
                 const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                 onSnapshot(colRef, (snapshot) => {
                     allManhwas = snapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data()
                     }));
-                    processData(); // Ejecutar pipeline de renderizado
+                    processData();
                 });
-
             } else {
                 currentUser = null;
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Offline`;
@@ -685,14 +668,12 @@
 
         initAuth();
 
-        // Modal Helpers
         window.openModal = () => document.getElementById('modal').classList.remove('hidden');
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
         document.getElementById('modal').addEventListener('click', (e) => {
             if (e.target.id === 'modal') closeModal();
         });
 
-        // Init Icons
         lucide.createIcons();
 
     </script>
