@@ -3,92 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitácora de Manhwas Pro</title>
+    <title>ManhwaLog Ultimate</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Fuentes Google -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Poppins', sans-serif; }
+        
         .glass-panel {
             background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
+        
         .form-input {
             background-color: #0f172a;
             border: 1px solid #334155;
             color: white;
             transition: all 0.2s;
         }
+        
         .form-input:focus {
             border-color: #8b5cf6;
             outline: none;
             box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
-        /* Ocultar barra de scroll pero permitir scroll */
-        .hide-scroll::-webkit-scrollbar {
-            width: 8px;
+
+        /* Scrollbar personalizado */
+        .hide-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+        .hide-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .hide-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .hide-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Animaciones para Toasts */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        .hide-scroll::-webkit-scrollbar-track {
-            background: #0f172a; 
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
-        .hide-scroll::-webkit-scrollbar-thumb {
-            background: #334155; 
-            border-radius: 4px;
-        }
+        .toast-enter { animation: slideIn 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
     </style>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            500: '#8b5cf6', // Violeta principal
-                            600: '#7c3aed',
-                        },
-                        dark: {
-                            900: '#0f172a', // Fondo muy oscuro
-                            800: '#1e293b', // Paneles
-                            700: '#334155',
-                        }
+                        brand: { 500: '#8b5cf6', 600: '#7c3aed' },
+                        dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' }
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-dark-900 text-white min-h-screen flex flex-col">
+<body class="bg-dark-900 text-slate-200 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
 
     <!-- Header -->
-    <header class="glass-panel sticky top-0 z-50 border-b border-dark-700">
+    <header class="glass-panel sticky top-0 z-50 border-b border-dark-700 shadow-lg shadow-black/20">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-2">
-                <i data-lucide="book-open" class="text-brand-500 w-8 h-8"></i>
-                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-pink-500">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand-600 p-2 rounded-lg shadow-lg shadow-brand-500/20">
+                    <i data-lucide="book-open" class="text-white w-6 h-6"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
                     ManhwaLog
                 </h1>
             </div>
             
             <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
-                <div id="user-status" class="text-sm text-gray-400 flex items-center gap-2 mr-2">
+                <div id="user-status" class="text-xs font-medium px-3 py-1.5 rounded-full bg-dark-800 border border-dark-700 flex items-center gap-2">
                     <span class="animate-pulse w-2 h-2 rounded-full bg-yellow-500"></span>
-                    Conectando...
+                    <span class="text-slate-400">Conectando...</span>
                 </div>
                 
-                <!-- Botones Importar/Exportar -->
+                <div class="h-8 w-px bg-dark-700 mx-1"></div>
+
+                <!-- Botones Acción -->
                 <div class="flex gap-2">
-                    <button onclick="document.getElementById('import-file').click()" class="p-2 text-gray-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar JSON">
+                    <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors tooltip" title="Importar JSON">
                         <i data-lucide="upload" class="w-5 h-5"></i>
                     </button>
-                    <!-- Agregamos onclick para limpiar el valor y permitir seleccionar el mismo archivo si falló antes -->
                     <input type="file" id="import-file" accept=".json" class="hidden" onclick="this.value=null" onchange="importData(this)">
                     
-                    <button onclick="exportData()" class="p-2 text-gray-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Exportar JSON">
+                    <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Exportar Backup">
                         <i data-lucide="download" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -99,57 +105,91 @@
     <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
         
-        <!-- BARRA DE HERRAMIENTAS SUPERIOR -->
+        <!-- DASHBOARD DE ESTADÍSTICAS -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass-panel p-4 rounded-xl flex items-center gap-4 border-l-4 border-brand-500">
+                <div class="p-3 bg-brand-500/10 rounded-lg text-brand-500"><i data-lucide="library"></i></div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total</p>
+                    <p class="text-2xl font-bold text-white" id="stat-total">0</p>
+                </div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl flex items-center gap-4 border-l-4 border-green-500">
+                <div class="p-3 bg-green-500/10 rounded-lg text-green-500"><i data-lucide="book-open-check"></i></div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Leyendo</p>
+                    <p class="text-2xl font-bold text-white" id="stat-reading">0</p>
+                </div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl flex items-center gap-4 border-l-4 border-blue-500">
+                <div class="p-3 bg-blue-500/10 rounded-lg text-blue-500"><i data-lucide="check-circle-2"></i></div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Completados</p>
+                    <p class="text-2xl font-bold text-white" id="stat-completed">0</p>
+                </div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl flex items-center gap-4 border-l-4 border-yellow-500">
+                <div class="p-3 bg-yellow-500/10 rounded-lg text-yellow-500"><i data-lucide="layers"></i></div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Caps. Leídos</p>
+                    <p class="text-2xl font-bold text-white" id="stat-chapters">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BARRA DE CONTROLES -->
         <div class="space-y-4 mb-8">
-            
-            <!-- Fila 1: Filtros de Estado (Tabs) -->
-            <div class="flex bg-dark-800 p-1 rounded-lg shadow-lg overflow-x-auto hide-scroll w-full sm:w-fit">
-                <button onclick="filterStatus('all')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap" data-filter="all">Todos</button>
-                <button onclick="filterStatus('leyendo')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="leyendo">Leyendo</button>
-                <button onclick="filterStatus('completado')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="completado">Completados</button>
-                <button onclick="filterStatus('pendiente')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="pendiente">Por Leer</button>
-                <button onclick="filterStatus('drop')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="drop">Dropeados</button>
+            <!-- Filtros Tabs -->
+            <div class="flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex bg-dark-800 p-1 rounded-lg shadow-lg overflow-x-auto hide-scroll max-w-full">
+                    <button onclick="filterStatus('all')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap" data-filter="all">Todos</button>
+                    <button onclick="filterStatus('leyendo')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap" data-filter="leyendo">Leyendo</button>
+                    <button onclick="filterStatus('completado')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap" data-filter="completado">Completados</button>
+                    <button onclick="filterStatus('pendiente')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap" data-filter="pendiente">Por Leer</button>
+                    <button onclick="filterStatus('drop')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap" data-filter="drop">Drop</button>
+                    <button onclick="filterStatus('favorites')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-pink-400 transition-colors whitespace-nowrap flex items-center gap-1" data-filter="favorites">
+                        <i data-lucide="heart" class="w-3 h-3"></i> Favs
+                    </button>
+                </div>
             </div>
 
-            <!-- Fila 2: Búsqueda, Ordenamiento y Agregar -->
+            <!-- Búsqueda y Ordenamiento -->
             <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-                
-                <!-- Buscador y Ordenamiento -->
                 <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-grow max-w-3xl">
-                    <!-- Buscador -->
-                    <div class="relative flex-grow">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-                        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar por título..." 
-                               class="w-full bg-dark-800 border border-dark-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                    <div class="relative flex-grow group">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-brand-500 transition-colors"></i>
+                        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar por título, autor o género..." 
+                               class="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-600">
                     </div>
 
-                    <!-- Ordenamiento -->
                     <div class="relative min-w-[200px]">
-                        <i data-lucide="arrow-up-down" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-                        <select id="sort-select" onchange="handleSort(this.value)" class="w-full bg-dark-800 border border-dark-700 rounded-lg pl-10 pr-8 py-2 text-white focus:outline-none focus:border-brand-500 appearance-none cursor-pointer">
-                            <option value="recent_desc">Recientes (Nuevos)</option>
-                            <option value="recent_asc">Recientes (Antiguos)</option>
-                            <option value="rating_desc">Mejor Calificados</option>
-                            <option value="rating_asc">Peor Calificados</option>
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-500"></i>
+                        </div>
+                        <select id="sort-select" onchange="handleSort(this.value)" class="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-10 py-2.5 text-white focus:outline-none focus:border-brand-500 appearance-none cursor-pointer hover:bg-dark-700/50 transition-colors">
+                            <option value="updated_desc">Actualizado (Reciente)</option>
+                            <option value="recent_desc">Creado (Nuevo)</option>
+                            <option value="recent_asc">Creado (Antiguo)</option>
+                            <option value="rating_desc">Mejor Nota</option>
                             <option value="chapter_desc">Más Capítulos</option>
-                            <option value="chapter_asc">Menos Capítulos</option>
-                            <option value="title_asc">A-Z</option>
+                            <option value="title_asc">Alfabético (A-Z)</option>
                         </select>
-                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Botón Agregar -->
-                <button onclick="openModal()" class="w-full md:w-auto flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-2 rounded-lg font-semibold shadow-lg shadow-brand-500/20 transition-all transform hover:scale-105 active:scale-95">
+                <button onclick="openModal()" class="w-full md:w-auto flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all transform hover:scale-105 active:scale-95 active:shadow-none">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                    <span>Nuevo</span>
+                    <span>Nuevo Manhwa</span>
                 </button>
             </div>
         </div>
 
-        <!-- Grid de Manhwas -->
-        <div id="manhwa-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 min-h-[400px]">
-            <!-- Loading Skeleton -->
+        <!-- GRID DE MANHWAS -->
+        <div id="manhwa-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 pb-20">
+            <!-- Loading Skeletons -->
             <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
             <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
             <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
@@ -157,142 +197,146 @@
         </div>
 
         <!-- Estado Vacío -->
-        <div id="empty-state" class="hidden text-center py-20 flex flex-col items-center justify-center">
-            <div class="bg-dark-800 p-4 rounded-full mb-4">
-                <i data-lucide="ghost" class="w-12 h-12 text-gray-500"></i>
+        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-24 text-center">
+            <div class="bg-dark-800/50 p-6 rounded-full mb-4 border border-dark-700">
+                <i data-lucide="search-x" class="w-12 h-12 text-slate-600"></i>
             </div>
-            <h3 class="text-xl font-semibold text-gray-300">No se encontraron resultados</h3>
-            <p class="text-gray-500 mt-2">Intenta ajustar los filtros o agrega un nuevo manhwa.</p>
+            <h3 class="text-xl font-semibold text-white mb-2">No encontramos nada</h3>
+            <p class="text-slate-500 max-w-xs mx-auto">Prueba ajustando los filtros o agrega un nuevo manhwa a tu colección.</p>
+            <button onclick="openModal()" class="mt-6 text-brand-400 hover:text-brand-300 text-sm font-medium">Agregar Nuevo</button>
         </div>
 
         <!-- Paginación -->
-        <div id="pagination-controls" class="flex justify-center items-center gap-4 mt-12 hidden">
-            <button onclick="changePage(-1)" id="prev-page" class="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <i data-lucide="chevron-left"></i>
+        <div id="pagination-controls" class="flex justify-center items-center gap-4 mt-8 hidden">
+            <button onclick="changePage(-1)" id="prev-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800 border border-dark-700 hover:bg-dark-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
             </button>
-            <span class="text-gray-400 font-medium">Página <span id="current-page-display" class="text-white">1</span> de <span id="total-pages-display">1</span></span>
-            <button onclick="changePage(1)" id="next-page" class="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <i data-lucide="chevron-right"></i>
+            <span class="text-slate-400 font-medium text-sm">Página <span id="current-page-display" class="text-white font-bold">1</span> de <span id="total-pages-display">1</span></span>
+            <button onclick="changePage(1)" id="next-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800 border border-dark-700 hover:bg-dark-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
         </div>
     </main>
 
-    <!-- Modal para Agregar/Editar -->
-    <div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- MODAL (CREAR / EDITAR) -->
+    <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[90] hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="glass-panel bg-dark-800 w-full max-w-2xl rounded-2xl shadow-2xl border border-dark-700 overflow-hidden transform transition-all scale-100 my-8">
-            <div class="px-6 py-4 border-b border-dark-700 flex justify-between items-center bg-dark-800/50">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <div class="px-6 py-4 border-b border-dark-700 flex justify-between items-center bg-dark-800/80">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2" id="modal-title">
                     <i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i>
-                    Registrar Manhwa
+                    <span>Registrar Manhwa</span>
                 </h2>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors"><i data-lucide="x"></i></button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors p-1 hover:bg-dark-700 rounded-md"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <form id="add-form" class="p-6 space-y-4">
-                <!-- Fila 1: Título -->
+            <form id="add-form" class="p-6 space-y-5">
+                <input type="hidden" id="edit-id" value=""> <!-- ID oculto para saber si es edición -->
+
+                <!-- Título -->
                 <div>
-                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Título</label>
-                    <input type="text" id="title" required class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: Solo Leveling">
+                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Título <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" required class="form-input w-full rounded-xl px-4 py-3 placeholder:text-slate-600" placeholder="Ej: Solo Leveling">
                 </div>
 
-                <!-- Fila 2: Autor y Género -->
+                <!-- Autor y Género -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Autor</label>
-                        <input type="text" id="autor" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: Chu-Gong">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Autor</label>
+                        <input type="text" id="autor" class="form-input w-full rounded-xl px-4 py-3 placeholder:text-slate-600" placeholder="Ej: Chu-Gong">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Género</label>
-                        <input type="text" id="genero" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: Acción, Fantasía">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Géneros (Separa con comas)</label>
+                        <input type="text" id="genero" class="form-input w-full rounded-xl px-4 py-3 placeholder:text-slate-600" placeholder="Ej: Acción, Fantasía, Sistema">
                     </div>
                 </div>
 
-                <!-- Fila 3: URLs -->
+                <!-- URLs -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">URL Portada (Imagen)</label>
-                        <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-lg px-4 py-3" placeholder="https://...">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL Portada</label>
+                        <div class="flex gap-2">
+                            <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-xl px-4 py-3 placeholder:text-slate-600" placeholder="https://...">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">URL Lectura</label>
-                        <input type="url" id="readingUrl" class="form-input w-full rounded-lg px-4 py-3" placeholder="https://sitio-lectura.com/...">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Link de Lectura</label>
+                        <input type="url" id="readingUrl" class="form-input w-full rounded-xl px-4 py-3 placeholder:text-slate-600" placeholder="https://tioscan.com/...">
                     </div>
                 </div>
 
-                <!-- Preview Imagen (Opcional visualmente) -->
-                <div class="w-full h-32 bg-dark-900 rounded-lg overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative">
+                <!-- Preview Imagen -->
+                <div class="w-full h-32 bg-dark-900 rounded-xl overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative">
                     <img id="image-preview" src="" class="w-full h-full object-cover hidden opacity-60" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
-                    <div class="text-gray-500 flex flex-col items-center gap-2 absolute inset-0 flex items-center justify-center pointer-events-none" id="image-placeholder">
+                    <div class="text-slate-600 flex flex-col items-center gap-2 absolute inset-0 flex items-center justify-center pointer-events-none" id="image-placeholder">
                         <i data-lucide="image" class="w-6 h-6"></i>
                         <span class="text-xs">Vista previa de imagen</span>
                     </div>
                 </div>
 
-                <!-- Fila 4: Estado y Calificación -->
+                <!-- Estado y Nota -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Estado</label>
                         <div class="relative">
-                            <select id="status" class="form-input w-full rounded-lg px-4 py-3 appearance-none cursor-pointer">
-                                <option value="leyendo">Leyendo</option>
-                                <option value="pendiente">Por Leer</option>
-                                <option value="completado">Completado</option>
-                                <option value="drop">Dropeado</option>
+                            <select id="status" class="form-input w-full rounded-xl px-4 py-3 appearance-none cursor-pointer">
+                                <option value="leyendo">🟢 Leyendo</option>
+                                <option value="pendiente">🟡 Por Leer</option>
+                                <option value="completado">🔵 Completado</option>
+                                <option value="drop">🔴 Dropeado</option>
                             </select>
-                            <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                            <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Nota (0-10)</label>
-                        <input type="number" id="rating" min="0" max="10" step="0.5" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: 9.5">
+                        <input type="number" id="rating" min="0" max="10" step="0.1" class="form-input w-full rounded-xl px-4 py-3" placeholder="Ej: 9.5">
                     </div>
                 </div>
 
-                <!-- Fila 5: Capítulos -->
-                <div class="grid grid-cols-2 gap-4">
+                <!-- Capítulos -->
+                <div class="grid grid-cols-2 gap-4 bg-dark-900/50 p-4 rounded-xl border border-dark-700/50">
                     <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Cap. Actual</label>
-                        <input type="number" id="chapter" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: 45">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Cap. Actual</label>
+                        <input type="number" id="chapter" class="form-input w-full rounded-xl px-4 py-3 text-center font-mono text-lg" placeholder="0">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Total Capítulos</label>
-                        <input type="number" id="totalChapters" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: 200">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Caps.</label>
+                        <input type="number" id="totalChapters" class="form-input w-full rounded-xl px-4 py-3 text-center font-mono text-lg text-slate-400" placeholder="?">
                     </div>
                 </div>
 
-                <!-- Fila 6: Notas -->
+                <!-- Notas -->
                 <div>
-                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Notas</label>
-                    <textarea id="notes" rows="2" class="form-input w-full rounded-lg px-4 py-3 resize-none" placeholder="Opiniones o detalles extra..."></textarea>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notas Personales</label>
+                    <textarea id="notes" rows="2" class="form-input w-full rounded-xl px-4 py-3 resize-none placeholder:text-slate-600" placeholder="Opiniones, día de actualización, etc..."></textarea>
                 </div>
 
-                <div class="pt-2 flex justify-end gap-3 border-t border-dark-700 mt-2">
-                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-dark-700 transition-colors font-medium">Cancelar</button>
-                    <button type="submit" class="px-6 py-2.5 rounded-lg text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20 transition-all transform hover:-translate-y-0.5">Guardar Manhwa</button>
+                <div class="pt-4 flex justify-end gap-3 border-t border-dark-700">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-dark-700 transition-colors font-medium">Cancelar</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20 transition-all transform hover:-translate-y-0.5">Guardar Cambios</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Scripts de Firebase y Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // ==========================================
-        // CONFIGURACIÓN DE FIREBASE (YA INTEGRADA)
+        // CONFIGURACIÓN (AUTO O MANUAL)
         // ==========================================
         let firebaseConfig = null;
         let appId = 'default-app';
         
-        // 1. CARGA DEL ENTORNO DE PRUEBA
         if (typeof __firebase_config !== 'undefined') {
             firebaseConfig = JSON.parse(__firebase_config);
             appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
-        } 
-        // 2. CONFIGURACIÓN FINAL PARA TU SITIO (YA LISTA)
-        else {
+        } else {
             firebaseConfig = {
                 apiKey: "AIzaSyA6VgAkqZsxgntU-xp9lpVeLx4GXMv4V6A",
                 authDomain: "bitahcora-manhwas.firebaseapp.com",
@@ -312,55 +356,86 @@
         // ESTADO GLOBAL
         // ==========================================
         let currentUser = null;
-        let allManhwas = []; 
-        let filteredManhwas = []; 
-        
+        let allManhwas = [];
+        let filteredManhwas = [];
         let state = {
             status: 'all',
             search: '',
-            sort: 'recent_desc',
+            sort: 'updated_desc', // Orden por defecto: últimos actualizados
             page: 1,
-            itemsPerPage: 8
+            itemsPerPage: 10
         };
 
         // ==========================================
-        // FUNCIONES DE LÓGICA DE NEGOCIO
+        // LÓGICA DE NEGOCIO Y RENDERIZADO
         // ==========================================
 
         function processData() {
             let result = [...allManhwas];
 
-            // 1. Filtro por Estado
-            if (state.status !== 'all') {
+            // 1. Filtro
+            if (state.status === 'favorites') {
+                result = result.filter(m => m.isFavorite === true);
+            } else if (state.status !== 'all') {
                 result = result.filter(m => m.status === state.status);
             }
 
-            // 2. Búsqueda por Texto
+            // 2. Búsqueda (Título, Autor, Género)
             if (state.search) {
-                const query = state.search.toLowerCase();
-                result = result.filter(m => m.title.toLowerCase().includes(query));
+                const q = state.search.toLowerCase();
+                result = result.filter(m => 
+                    m.title.toLowerCase().includes(q) || 
+                    (m.autor && m.autor.toLowerCase().includes(q)) ||
+                    (m.genero && m.genero.toLowerCase().includes(q))
+                );
             }
 
             // 3. Ordenamiento
             result.sort((a, b) => {
-                const dateA = a.createdAt?.seconds || 0;
-                const dateB = b.createdAt?.seconds || 0;
-                
+                const dateUpA = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
+                const dateUpB = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
+                const dateCrA = a.createdAt?.seconds || 0;
+                const dateCrB = b.createdAt?.seconds || 0;
+
                 switch(state.sort) {
-                    case 'recent_desc': return dateB - dateA;
-                    case 'recent_asc': return dateA - dateB;
+                    case 'updated_desc': return dateUpB - dateUpA;
+                    case 'recent_desc': return dateCrB - dateCrA;
+                    case 'recent_asc': return dateCrA - dateCrB;
                     case 'rating_desc': return (b.rating || 0) - (a.rating || 0);
                     case 'rating_asc': return (a.rating || 0) - (b.rating || 0);
                     case 'chapter_desc': return (b.chapter || 0) - (a.chapter || 0);
                     case 'chapter_asc': return (a.chapter || 0) - (b.chapter || 0);
                     case 'title_asc': return a.title.localeCompare(b.title);
-                    default: return dateB - dateA;
+                    default: return dateUpB - dateUpA;
                 }
             });
 
             filteredManhwas = result;
+            updateStats();
             updatePaginationUI();
             renderGrid();
+        }
+
+        function updateStats() {
+            // Stats se calculan sobre el total GLOBAL (no filtrado) para ser más útiles
+            const total = allManhwas.length;
+            const reading = allManhwas.filter(m => m.status === 'leyendo').length;
+            const completed = allManhwas.filter(m => m.status === 'completado').length;
+            const chapters = allManhwas.reduce((acc, curr) => acc + (parseInt(curr.chapter) || 0), 0);
+
+            animateValue('stat-total', total);
+            animateValue('stat-reading', reading);
+            animateValue('stat-completed', completed);
+            animateValue('stat-chapters', chapters);
+        }
+
+        function animateValue(id, end) {
+            const obj = document.getElementById(id);
+            if(!obj) return;
+            const current = parseInt(obj.innerText) || 0;
+            if (current === end) return;
+            obj.innerText = end; 
+            // Simple update, animation logic could be added here
         }
 
         function renderGrid() {
@@ -368,324 +443,270 @@
             const emptyState = document.getElementById('empty-state');
             
             const startIndex = (state.page - 1) * state.itemsPerPage;
-            const endIndex = startIndex + state.itemsPerPage;
-            const pageData = filteredManhwas.slice(startIndex, endIndex);
+            const pageData = filteredManhwas.slice(startIndex, startIndex + state.itemsPerPage);
 
-            if (pageData.length === 0) {
+            if (pageData.length === 0 && allManhwas.length > 0) {
                 grid.innerHTML = '';
                 grid.classList.add('hidden');
                 emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                grid.classList.remove('hidden');
+                return;
+            } 
+            
+            emptyState.classList.add('hidden');
+            grid.classList.remove('hidden');
+            
+            grid.innerHTML = pageData.map(m => {
+                const current = parseInt(m.chapter) || 0;
+                const total = parseInt(m.totalChapters) || 0;
+                const percent = total > 0 ? Math.min((current / total) * 100, 100) : 0;
                 
-                grid.innerHTML = pageData.map(manhwa => {
-                    let statusConfig = { color: 'gray', label: '?' };
-                    switch(manhwa.status) {
-                        case 'leyendo': statusConfig = { color: 'green', label: 'Leyendo' }; break;
-                        case 'completado': statusConfig = { color: 'blue', label: 'Completado' }; break;
-                        case 'pendiente': statusConfig = { color: 'yellow', label: 'Por Leer' }; break;
-                        case 'drop': statusConfig = { color: 'red', label: 'Abandonado' }; break;
-                    }
-                    
-                    const borderColor = `border-${statusConfig.color}-500/30`;
-                    const bgColor = `bg-${statusConfig.color}-500/20`;
-                    const textColor = `text-${statusConfig.color}-400`;
-                    const currentChapter = parseInt(manhwa.chapter) || 0;
-                    
-                    // Datos extra opcionales para visualización
-                    const autor = manhwa.autor ? `<span class="text-[10px] text-gray-400 block truncate">${manhwa.autor}</span>` : '';
-                    const genero = manhwa.genero ? `<span class="text-[10px] text-brand-400/80 block truncate mb-1">${manhwa.genero}</span>` : '';
+                // Colores y Etiquetas
+                const st = getStatusDetails(m.status);
+                
+                // Tags de género (primeros 2)
+                let genreTags = '';
+                if(m.genero) {
+                    const tags = m.genero.split(',').slice(0, 2);
+                    genreTags = tags.map(t => `<span class="px-1.5 py-0.5 rounded bg-dark-700 text-[10px] text-slate-300 truncate max-w-[80px]">${t.trim()}</span>`).join('');
+                }
 
-                    return `
-                    <div class="glass-panel rounded-xl overflow-hidden group relative hover:border-brand-500/50 transition-all duration-300 flex flex-col h-full shadow-lg">
+                // Fecha relativa
+                const lastUpdate = m.updatedAt ? new Date(m.updatedAt.seconds * 1000).toLocaleDateString() : 'Reciente';
+
+                return `
+                <div class="glass-panel rounded-xl overflow-hidden group flex flex-col h-full hover:border-brand-500/30 transition-all duration-300 relative">
+                    
+                    <!-- IMAGEN -->
+                    <div class="relative w-full aspect-[3/4] bg-dark-900 overflow-hidden cursor-pointer" onclick="window.openEditModal('${m.id}')">
+                        <img src="${m.coverUrl || ''}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                             onerror="this.src='https://placehold.co/300x400/1e293b/94a3b8?text=Sin+Portada'">
                         
-                        <!-- IMAGEN FORMATO 3:4 -->
-                        <div class="w-full aspect-[3/4] overflow-hidden relative bg-dark-900 group-hover:shadow-2xl transition-all">
-                            <a href="${manhwa.readingUrl || manhwa.url_lectura || '#'}" target="${manhwa.readingUrl || manhwa.url_lectura ? '_blank' : '_self'}" class="block w-full h-full cursor-${manhwa.readingUrl || manhwa.url_lectura ? 'pointer' : 'default'}">
-                                <img src="${manhwa.coverUrl || ''}" alt="${manhwa.title}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                     onerror="this.src='https://placehold.co/300x400/1e293b/94a3b8?text=Sin+Imagen'">
-                            </a>
-                            <div class="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-transparent to-transparent opacity-60 pointer-events-none"></div>
-                            <div class="absolute top-2 right-2 px-2 py-1 rounded text-[10px] uppercase font-bold border ${borderColor} ${bgColor} ${textColor} backdrop-blur-md shadow-md">
-                                ${statusConfig.label}
+                        <!-- Gradiente -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent to-transparent opacity-90"></div>
+                        
+                        <!-- Badge Estado -->
+                        <div class="absolute top-2 left-2 px-2 py-1 rounded text-[10px] font-bold uppercase border backdrop-blur-md shadow-sm ${st.classes}">
+                            ${st.label}
+                        </div>
+
+                        <!-- Botón Favorito -->
+                        <button onclick="event.stopPropagation(); window.toggleFavorite('${m.id}', ${m.isFavorite})" 
+                                class="absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-md bg-black/30 hover:bg-pink-500/20 transition-all group/fav">
+                            <i data-lucide="heart" class="w-4 h-4 ${m.isFavorite ? 'fill-pink-500 text-pink-500' : 'text-white group-hover/fav:text-pink-400'} transition-colors"></i>
+                        </button>
+
+                        <!-- Barra de Progreso -->
+                        ${total > 0 ? `
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-dark-800">
+                            <div class="h-full bg-brand-500" style="width: ${percent}%"></div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- CONTENIDO -->
+                    <div class="p-4 flex flex-col flex-grow relative -mt-4 z-10 pointer-events-none">
+                        <div class="pointer-events-auto">
+                            <!-- Título y Link -->
+                            <div class="flex justify-between items-start gap-2 mb-1">
+                                <h3 class="text-base font-bold text-white leading-tight line-clamp-2 hover:text-brand-400 cursor-pointer transition-colors" onclick="window.openEditModal('${m.id}')" title="${m.title}">
+                                    ${m.title}
+                                </h3>
+                                ${m.readingUrl ? `
+                                <a href="${m.readingUrl}" target="_blank" class="text-slate-500 hover:text-brand-400 shrink-0 mt-0.5" title="Leer Online">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                                </a>` : ''}
+                            </div>
+
+                            <!-- Autor y Tags -->
+                            <div class="space-y-1.5 mb-3">
+                                ${m.autor ? `<p class="text-xs text-slate-400 truncate"><i data-lucide="pen-tool" class="w-3 h-3 inline mr-1 opacity-50"></i>${m.autor}</p>` : ''}
+                                <div class="flex flex-wrap gap-1">${genreTags}</div>
+                            </div>
+
+                            <!-- Nota y Fecha -->
+                            <div class="flex items-center justify-between text-xs text-slate-500 mb-3 border-t border-white/5 pt-2">
+                                <div class="flex items-center gap-1 text-yellow-400 font-bold">
+                                    <i data-lucide="star" class="w-3 h-3 fill-current"></i> ${m.rating || '-'}
+                                </div>
+                                <span>${lastUpdate}</span>
                             </div>
                         </div>
 
-                        <!-- CONTENIDO -->
-                        <div class="p-4 flex flex-col flex-grow relative -mt-6 z-10 pointer-events-none">
-                            <div class="pointer-events-auto">
-                                <h3 class="text-lg font-bold text-white leading-tight mb-0.5 line-clamp-2 drop-shadow-md" title="${manhwa.title}">
-                                    ${manhwa.title}
-                                </h3>
-                                ${autor}
-                                ${genero}
-                                
-                                <div class="flex items-center gap-1 text-yellow-400 text-xs font-bold mb-3 mt-1">
-                                    <i data-lucide="star" class="w-3 h-3 fill-current"></i>
-                                    <span>${manhwa.rating || '-'}</span>
-                                </div>
-                            </div>
+                        <!-- CONTROLES -->
+                        <div class="mt-auto flex items-center justify-between gap-2 pointer-events-auto">
+                            <!-- Eliminar -->
+                            <button onclick="window.deleteItem('${m.id}')" class="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
 
-                            <!-- CONTROL FOOTER -->
-                            <div class="mt-auto pt-3 border-t border-white/10 flex items-center justify-between gap-2 pointer-events-auto">
-                                <button onclick="window.deleteItem('${manhwa.id}')" 
-                                        class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group/delete" title="Eliminar">
-                                    <i data-lucide="trash-2" class="w-4 h-4 group-hover/delete:scale-110 transition-transform"></i>
+                            <!-- Counter -->
+                            <div class="flex items-center bg-dark-800 rounded-lg border border-dark-700 shadow-sm overflow-hidden flex-grow justify-end max-w-[140px]">
+                                <button onclick="window.updateChapter('${m.id}', ${current - 1})" class="px-2 py-1.5 text-slate-400 hover:text-white hover:bg-dark-700 active:bg-dark-600">
+                                    <i data-lucide="minus" class="w-3 h-3"></i>
                                 </button>
-                                <div class="flex items-center bg-dark-800 rounded-lg border border-dark-700 shadow-sm overflow-hidden">
-                                    <button onclick="event.stopPropagation(); window.updateChapter('${manhwa.id}', ${currentChapter - 1})" 
-                                            class="px-3 py-1.5 text-gray-400 hover:text-white hover:bg-dark-700 active:bg-dark-600 transition-colors border-r border-dark-700">
-                                        <i data-lucide="minus" class="w-3 h-3"></i>
-                                    </button>
-                                    <span class="px-2 py-1 text-xs font-mono text-brand-400 font-bold min-w-[3.5rem] text-center bg-dark-900/50 flex flex-col justify-center leading-none">
-                                        <span class="text-[9px] text-gray-500 uppercase">Cap.</span>
-                                        <span class="text-sm">${currentChapter}${manhwa.totalChapters ? '<span class="text-gray-600">/' + manhwa.totalChapters + '</span>' : ''}</span>
-                                    </span>
-                                    <button onclick="event.stopPropagation(); window.updateChapter('${manhwa.id}', ${currentChapter + 1})" 
-                                            class="px-3 py-1.5 text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700 transition-colors">
-                                        <i data-lucide="plus" class="w-3 h-3"></i>
-                                    </button>
+                                <div class="flex-grow text-center flex flex-col justify-center px-1 bg-dark-900/50 h-full border-x border-dark-700">
+                                    <span class="text-xs font-bold text-white font-mono leading-none">${current}</span>
+                                    ${total ? `<span class="text-[9px] text-slate-500 font-mono leading-none">/${total}</span>` : ''}
                                 </div>
+                                <button onclick="window.updateChapter('${m.id}', ${current + 1})" class="px-2 py-1.5 text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    `;
-                }).join('');
-            }
+                </div>
+                `;
+            }).join('');
+            
             lucide.createIcons();
         }
 
-        function updatePaginationUI() {
-            const totalPages = Math.ceil(filteredManhwas.length / state.itemsPerPage) || 1;
-            const container = document.getElementById('pagination-controls');
-            
-            if (state.page > totalPages) state.page = totalPages;
-            if (state.page < 1) state.page = 1;
-
-            document.getElementById('current-page-display').innerText = state.page;
-            document.getElementById('total-pages-display').innerText = totalPages;
-            
-            document.getElementById('prev-page').disabled = state.page === 1;
-            document.getElementById('next-page').disabled = state.page === totalPages;
-
-            if (totalPages > 1) {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
+        function getStatusDetails(status) {
+            switch(status) {
+                case 'leyendo': return { label: 'Leyendo', classes: 'bg-green-500/20 text-green-400 border-green-500/30' };
+                case 'completado': return { label: 'Completado', classes: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
+                case 'pendiente': return { label: 'Por Leer', classes: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' };
+                case 'drop': return { label: 'Drop', classes: 'bg-red-500/20 text-red-400 border-red-500/30' };
+                default: return { label: '?', classes: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
             }
         }
 
         // ==========================================
-        // HELPERS UI
+        // UI ACTIONS
         // ==========================================
 
-        window.filterStatus = (status) => {
-            state.status = status;
-            state.page = 1;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                const isSelected = btn.dataset.filter === status;
-                btn.className = isSelected 
-                    ? 'filter-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap'
-                    : 'filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap';
-            });
-            processData();
-        };
+        window.openEditModal = (id) => {
+            const modal = document.getElementById('modal');
+            const form = document.getElementById('add-form');
+            const titleEl = document.getElementById('modal-title');
+            
+            form.reset();
+            window.updateImagePreview('');
 
-        window.handleSearch = (value) => {
-            state.search = value;
-            state.page = 1;
-            processData();
-        };
+            if (id) {
+                // MODO EDICIÓN
+                const item = allManhwas.find(m => m.id === id);
+                if (!item) return;
 
-        window.handleSort = (value) => {
-            state.sort = value;
-            processData();
-        };
-
-        window.changePage = (direction) => {
-            state.page += direction;
-            processData();
-            document.getElementById('manhwa-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        };
-
-        window.updateImagePreview = (url) => {
-            const img = document.getElementById('image-preview');
-            const placeholder = document.getElementById('image-placeholder');
-            if (url) {
-                img.src = url;
-                img.classList.remove('hidden');
-                placeholder.classList.add('hidden');
+                document.getElementById('edit-id').value = id;
+                titleEl.innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-brand-500"></i><span>Editar Manhwa</span>`;
+                
+                // Llenar campos
+                document.getElementById('title').value = item.title;
+                document.getElementById('autor').value = item.autor || '';
+                document.getElementById('genero').value = item.genero || '';
+                document.getElementById('coverUrl').value = item.coverUrl || '';
+                document.getElementById('readingUrl').value = item.readingUrl || '';
+                document.getElementById('status').value = item.status;
+                document.getElementById('rating').value = item.rating || '';
+                document.getElementById('chapter').value = item.chapter || 0;
+                document.getElementById('totalChapters').value = item.totalChapters || '';
+                document.getElementById('notes').value = item.notes || '';
+                
+                window.updateImagePreview(item.coverUrl);
             } else {
-                img.classList.add('hidden');
-                placeholder.classList.remove('hidden');
+                // MODO CREAR
+                document.getElementById('edit-id').value = '';
+                titleEl.innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5 text-brand-500"></i><span>Registrar Manhwa</span>`;
             }
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
         };
 
-        // --- IMPORTAR / EXPORTAR ---
-
-        window.exportData = () => {
-            if (!allManhwas.length) return alert("No hay datos para exportar.");
-            const cleanData = allManhwas.map(({id, createdAt, ...rest}) => rest);
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanData));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "manhwalog_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+        window.toggleFavorite = async (id, currentStatus) => {
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
+                await updateDoc(docRef, { isFavorite: !currentStatus });
+                // No necesitamos recargar manualmente, el listener lo hace
+            } catch (e) { showToast('Error al actualizar favorito', 'error'); }
         };
-
-        // IMPORTACIÓN INTELIGENTE (ACTUALIZADA)
-        window.importData = (inputElement) => {
-            if (!currentUser) return alert("Debes estar conectado para importar.");
-            const file = inputElement.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    // 1. Intentar parsear el JSON
-                    let json;
-                    try {
-                        json = JSON.parse(e.target.result);
-                    } catch (syntaxError) {
-                        throw new Error("El archivo no tiene un formato JSON válido. Revisa que no sobren comas al final.");
-                    }
-
-                    // 2. Normalizar a Array (Manejo de Objeto Único)
-                    if (!Array.isArray(json)) {
-                         // Si es un objeto que contiene una lista en una propiedad común
-                         if (json.manhwas && Array.isArray(json.manhwas)) json = json.manhwas;
-                         else if (json.data && Array.isArray(json.data)) json = json.data;
-                         else if (json.items && Array.isArray(json.items)) json = json.items;
-                         // Si es un objeto único (el manhwa en sí)
-                         else json = [json];
-                    }
-
-                    if (!Array.isArray(json)) throw new Error("El contenido no pudo ser reconocido como una lista ni como un objeto válido.");
-
-                    const confirmMsg = `Se encontraron ${json.length} elementos. ¿Importar?`;
-                    if (!confirm(confirmMsg)) return;
-
-                    const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
-                    
-                    let added = 0;
-                    let skipped = 0;
-
-                    for (const item of json) {
-                        const title = item.title || item.titulo || item.nombre || item.name || item.Title || item.Name;
-                        const cover = item.coverUrl || item.cover || item.image || item.img || item.imagen || item.portada || item.imagen_url || '';
-                        
-                        let statusRaw = String(item.status || item.estado || 'pendiente').toLowerCase();
-                        let status = 'pendiente';
-                        if (statusRaw.includes('ley') || statusRaw.includes('read') || statusRaw.includes('viendo')) status = 'leyendo';
-                        else if (statusRaw.includes('comp') || statusRaw.includes('finish') || statusRaw.includes('termin')) status = 'completado';
-                        else if (statusRaw.includes('drop') || statusRaw.includes('aband')) status = 'drop';
-
-                        const rating = item.rating || item.nota || item.calificacion || item.score || 0;
-                        const chapter = item.chapter || item.capitulo || item.chap || item.capitulo_actual || 0;
-                        
-                        const autor = item.autor || item.author || '';
-                        const genero = item.genero || item.genre || '';
-                        const totalChapters = item.total_capitulos || item.totalChapters || 0;
-                        const readingUrl = item.url_lectura || item.readingUrl || '';
-                        const notes = item.notas || item.notes || '';
-
-                        if (title) {
-                            await addDoc(colRef, {
-                                title: String(title),
-                                coverUrl: String(cover),
-                                status: status,
-                                rating: parseFloat(rating) || 0,
-                                chapter: parseInt(chapter) || 0,
-                                autor: String(autor),
-                                genero: String(genero),
-                                totalChapters: parseInt(totalChapters) || 0,
-                                readingUrl: String(readingUrl),
-                                notes: String(notes),
-                                createdAt: serverTimestamp()
-                            });
-                            added++;
-                        } else {
-                            skipped++;
-                        }
-                    }
-                    alert(`Importación finalizada.\n✅ Agregados: ${added}\n⚠️ Omitidos (sin título): ${skipped}`);
-                } catch (err) {
-                    console.error(err);
-                    alert("Error: " + err.message);
-                } finally {
-                    inputElement.value = ''; 
-                }
-            };
-            reader.readAsText(file);
-        };
-
-        // --- CRUD BÁSICO ---
 
         window.updateChapter = async (id, newChapter) => {
             if (newChapter < 0) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
-                await updateDoc(docRef, { chapter: newChapter });
-            } catch (e) { console.error(e); }
+                await updateDoc(docRef, { 
+                    chapter: newChapter,
+                    updatedAt: serverTimestamp() // Importante: actualizar timestamp
+                });
+            } catch (e) { showToast('Error al actualizar capítulo', 'error'); }
         };
 
         window.deleteItem = async (id) => {
-            if(!confirm("¿Eliminar permanentemente?")) return;
+            if(!confirm("¿Seguro que quieres eliminar este manhwa? Esta acción no se puede deshacer.")) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
                 await deleteDoc(docRef);
-            } catch (e) { console.error(e); }
+                showToast('Manhwa eliminado correctamente', 'success');
+            } catch (e) { showToast('Error al eliminar', 'error'); }
         };
 
-        // Form Submit
+        // Guardar (Crear o Editar)
         const form = document.getElementById('add-form');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!currentUser) return alert("Error de auth");
+            if (!currentUser) return showToast("Debes estar conectado", 'error');
 
-            const title = document.getElementById('title').value;
-            const coverUrl = document.getElementById('coverUrl').value;
-            const status = document.getElementById('status').value;
-            const rating = document.getElementById('rating').value;
-            const chapter = document.getElementById('chapter').value;
-            
-            const autor = document.getElementById('autor').value;
-            const genero = document.getElementById('genero').value;
-            const readingUrl = document.getElementById('readingUrl').value;
-            const totalChapters = document.getElementById('totalChapters').value;
-            const notes = document.getElementById('notes').value;
+            const id = document.getElementById('edit-id').value;
+            const data = {
+                title: document.getElementById('title').value,
+                autor: document.getElementById('autor').value,
+                genero: document.getElementById('genero').value,
+                coverUrl: document.getElementById('coverUrl').value,
+                readingUrl: document.getElementById('readingUrl').value,
+                status: document.getElementById('status').value,
+                rating: parseFloat(document.getElementById('rating').value) || 0,
+                chapter: parseInt(document.getElementById('chapter').value) || 0,
+                totalChapters: parseInt(document.getElementById('totalChapters').value) || 0,
+                notes: document.getElementById('notes').value,
+                updatedAt: serverTimestamp()
+            };
 
             try {
                 const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
-                await addDoc(colRef, {
-                    title,
-                    coverUrl,
-                    status,
-                    rating: parseFloat(rating) || 0,
-                    chapter: parseInt(chapter) || 0,
-                    autor,
-                    genero,
-                    readingUrl,
-                    totalChapters: parseInt(totalChapters) || 0,
-                    notes,
-                    createdAt: serverTimestamp()
-                });
+                
+                if (id) {
+                    // UPDATE
+                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
+                    await updateDoc(docRef, data);
+                    showToast('Manhwa actualizado', 'success');
+                } else {
+                    // CREATE
+                    data.createdAt = serverTimestamp();
+                    data.isFavorite = false; // Default
+                    await addDoc(colRef, data);
+                    showToast('Manhwa registrado', 'success');
+                }
+                
                 closeModal();
-                form.reset();
-                window.updateImagePreview('');
             } catch (error) {
-                alert("Error al guardar");
+                console.error(error);
+                showToast('Error al guardar los datos', 'error');
             }
         });
 
-        // ==========================================
-        // INICIALIZACIÓN
-        // ==========================================
-        
+        // TOAST SYSTEM
+        window.showToast = (msg, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            const colors = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+            const icon = type === 'error' ? 'alert-circle' : 'check-circle';
+            
+            el.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl text-white font-medium text-sm toast-enter pointer-events-auto ${colors}`;
+            el.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span>${msg}</span>`;
+            
+            container.appendChild(el);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                el.classList.remove('toast-enter');
+                el.classList.add('toast-exit');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        };
+
+        // --- AUTH & INIT ---
         async function initAuth() {
             const statusEl = document.getElementById('user-status');
             try {
@@ -696,7 +717,8 @@
                 }
             } catch (error) {
                 console.error("Auth error:", error);
-                statusEl.innerHTML = `<span class="text-red-500">Error</span>`;
+                statusEl.innerHTML = `<span class="text-red-400">Error Conexión</span>`;
+                showToast('Error de conexión con Firebase', 'error');
             }
         }
 
@@ -704,19 +726,16 @@
             const statusEl = document.getElementById('user-status');
             if (user) {
                 currentUser = user;
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Conectado`;
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span> <span class="text-slate-300">En línea</span>`;
                 
                 const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                 onSnapshot(colRef, (snapshot) => {
-                    allManhwas = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
+                    allManhwas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     processData();
                 });
             } else {
                 currentUser = null;
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Offline`;
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> <span class="text-slate-400">Offline</span>`;
                 allManhwas = [];
                 processData();
             }
@@ -724,14 +743,88 @@
 
         initAuth();
 
-        window.openModal = () => document.getElementById('modal').classList.remove('hidden');
+        // UI HELPERS
+        window.filterStatus = (s) => { 
+            state.status = s; state.page = 1; 
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const isActive = btn.dataset.filter === s;
+                btn.classList.toggle('bg-brand-600', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('text-slate-400', !isActive);
+            });
+            processData(); 
+        };
+        window.handleSearch = (v) => { state.search = v; state.page = 1; processData(); };
+        window.handleSort = (v) => { state.sort = v; processData(); };
+        window.changePage = (d) => { 
+            state.page += d; 
+            processData(); 
+            document.getElementById('manhwa-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        window.updateImagePreview = (url) => {
+            const img = document.getElementById('image-preview');
+            const holder = document.getElementById('image-placeholder');
+            if(url) { img.src = url; img.classList.remove('hidden'); holder.classList.add('hidden'); }
+            else { img.classList.add('hidden'); holder.classList.remove('hidden'); }
+        };
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
-        document.getElementById('modal').addEventListener('click', (e) => {
-            if (e.target.id === 'modal') closeModal();
-        });
+        document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') window.closeModal(); });
+
+        // EXPORT/IMPORT (Manteniendo lógica robusta previa)
+        window.exportData = () => {
+            if (!allManhwas.length) return showToast("Nada para exportar", 'error');
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allManhwas.map(({id, createdAt, updatedAt, ...rest}) => rest)));
+            const node = document.createElement('a');
+            node.setAttribute("href", dataStr);
+            node.setAttribute("download", `manhwalog_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(node);
+            node.click();
+            node.remove();
+        };
+
+        window.importData = (input) => {
+            if (!currentUser) return showToast("Conecta primero", 'error');
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    let json = JSON.parse(e.target.result);
+                    if (!Array.isArray(json)) json = json.manhwas || json.data || [json];
+                    if (!Array.isArray(json)) throw new Error("Formato inválido");
+                    
+                    if(!confirm(`¿Importar ${json.length} elementos?`)) return;
+                    
+                    const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
+                    let count = 0;
+                    for (const item of json) {
+                        const title = item.title || item.titulo || item.nombre;
+                        if(title) {
+                            await addDoc(colRef, {
+                                title: String(title),
+                                coverUrl: item.coverUrl || item.imagen_url || '',
+                                status: (item.status || 'pendiente').toLowerCase(),
+                                rating: parseFloat(item.rating || item.calificacion) || 0,
+                                chapter: parseInt(item.chapter || item.capitulo_actual) || 0,
+                                totalChapters: parseInt(item.totalChapters || item.total_capitulos) || 0,
+                                autor: item.autor || '',
+                                genero: item.genero || '',
+                                readingUrl: item.readingUrl || item.url_lectura || '',
+                                notes: item.notes || item.notas || '',
+                                isFavorite: !!item.isFavorite,
+                                createdAt: serverTimestamp()
+                            });
+                            count++;
+                        }
+                    }
+                    showToast(`${count} importados correctamente`);
+                } catch(err) { showToast("Error al importar: " + err.message, 'error'); }
+                input.value = '';
+            };
+            reader.readAsText(file);
+        };
 
         lucide.createIcons();
-
     </script>
 </body>
 </html>
