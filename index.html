@@ -281,21 +281,18 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // ==========================================
-        // CONFIGURACIÓN DE FIREBASE
+        // CONFIGURACIÓN DE FIREBASE (YA INTEGRADA)
         // ==========================================
         let firebaseConfig = null;
         let appId = 'default-app';
         
-        // 1. INTENTO DE CARGAR CONFIG DEL ENTORNO (CANVAS)
+        // 1. CARGA DEL ENTORNO DE PRUEBA
         if (typeof __firebase_config !== 'undefined') {
             firebaseConfig = JSON.parse(__firebase_config);
             appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
         } 
-        // 2. CONFIGURACIÓN MANUAL (PARA GITHUB PAGES / LOCAL)
+        // 2. CONFIGURACIÓN FINAL PARA TU SITIO (YA LISTA)
         else {
-            // ⚠️ ⚠️ ⚠️ CONFIGURACIÓN OBLIGATORIA ⚠️ ⚠️ ⚠️
-            // Si ya lo configuraste, asegúrate de que esté descomentado (sin /* */).
-            
             firebaseConfig = {
                 apiKey: "AIzaSyA6VgAkqZsxgntU-xp9lpVeLx4GXMv4V6A",
                 authDomain: "bitahcora-manhwas.firebaseapp.com",
@@ -305,24 +302,6 @@
                 appId: "1:71530448207:web:1d140e9a8f1a1a80c2713a"
             };
             appId = "mi-coleccion-manhwas";
-        }
-
-        // ==========================================
-        // VALIDACIÓN Y UI DE ERROR (No tocar)
-        // ==========================================
-        if (!firebaseConfig) {
-            document.body.innerHTML += `
-                <div style="position:fixed;inset:0;background:rgba(15, 23, 42, 0.98);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-align:center;padding:2rem;">
-                    <div style="background:#ef4444;padding:1rem;border-radius:50%;margin-bottom:1.5rem;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    </div>
-                    <h1 style="font-size:2rem;font-weight:bold;margin-bottom:1rem;">Falta Conectar Firebase</h1>
-                    <p style="max-width:600px;margin-bottom:2rem;line-height:1.6;color:#94a3b8;">
-                        Estás ejecutando la bitácora fuera del entorno de prueba. Recuerda que debes pegar tu configuración en el archivo index.html.
-                    </p>
-                </div>
-            `;
-            throw new Error("Firebase Config Missing.");
         }
 
         const app = initializeApp(firebaseConfig);
@@ -558,7 +537,7 @@
             downloadAnchorNode.remove();
         };
 
-        // IMPORTACIÓN INTELIGENTE
+        // IMPORTACIÓN INTELIGENTE (ACTUALIZADA)
         window.importData = (inputElement) => {
             if (!currentUser) return alert("Debes estar conectado para importar.");
             const file = inputElement.files[0];
@@ -567,8 +546,25 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    const json = JSON.parse(e.target.result);
-                    if (!Array.isArray(json)) throw new Error("El archivo no es una lista válida.");
+                    // 1. Intentar parsear el JSON
+                    let json;
+                    try {
+                        json = JSON.parse(e.target.result);
+                    } catch (syntaxError) {
+                        throw new Error("El archivo no tiene un formato JSON válido. Revisa que no sobren comas al final.");
+                    }
+
+                    // 2. Normalizar a Array (Manejo de Objeto Único)
+                    if (!Array.isArray(json)) {
+                         // Si es un objeto que contiene una lista en una propiedad común
+                         if (json.manhwas && Array.isArray(json.manhwas)) json = json.manhwas;
+                         else if (json.data && Array.isArray(json.data)) json = json.data;
+                         else if (json.items && Array.isArray(json.items)) json = json.items;
+                         // Si es un objeto único (el manhwa en sí)
+                         else json = [json];
+                    }
+
+                    if (!Array.isArray(json)) throw new Error("El contenido no pudo ser reconocido como una lista ni como un objeto válido.");
 
                     const confirmMsg = `Se encontraron ${json.length} elementos. ¿Importar?`;
                     if (!confirm(confirmMsg)) return;
@@ -579,12 +575,9 @@
                     let skipped = 0;
 
                     for (const item of json) {
-                        // INTENTO DE MAPEO INTELIGENTE
-                        // Busca campos comunes en español e inglés
                         const title = item.title || item.titulo || item.nombre || item.name || item.Title || item.Name;
                         const cover = item.coverUrl || item.cover || item.image || item.img || item.imagen || item.portada || item.imagen_url || '';
                         
-                        // Normalizar Estado
                         let statusRaw = String(item.status || item.estado || 'pendiente').toLowerCase();
                         let status = 'pendiente';
                         if (statusRaw.includes('ley') || statusRaw.includes('read') || statusRaw.includes('viendo')) status = 'leyendo';
@@ -594,7 +587,6 @@
                         const rating = item.rating || item.nota || item.calificacion || item.score || 0;
                         const chapter = item.chapter || item.capitulo || item.chap || item.capitulo_actual || 0;
                         
-                        // Campos extra del JSON nuevo
                         const autor = item.autor || item.author || '';
                         const genero = item.genero || item.genre || '';
                         const totalChapters = item.total_capitulos || item.totalChapters || 0;
@@ -623,9 +615,9 @@
                     alert(`Importación finalizada.\n✅ Agregados: ${added}\n⚠️ Omitidos (sin título): ${skipped}`);
                 } catch (err) {
                     console.error(err);
-                    alert("Error al leer el archivo. Verifica que sea un JSON válido.");
+                    alert("Error: " + err.message);
                 } finally {
-                    inputElement.value = ''; // Limpiar input
+                    inputElement.value = ''; 
                 }
             };
             reader.readAsText(file);
@@ -661,7 +653,6 @@
             const rating = document.getElementById('rating').value;
             const chapter = document.getElementById('chapter').value;
             
-            // Nuevos campos
             const autor = document.getElementById('autor').value;
             const genero = document.getElementById('genero').value;
             const readingUrl = document.getElementById('readingUrl').value;
