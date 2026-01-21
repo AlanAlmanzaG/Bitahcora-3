@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitácora de Manhwas Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fuentes Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .form-input {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            border-color: #8b5cf6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+        /* Ocultar barra de scroll pero permitir scroll */
+        .hide-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .hide-scroll::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        .hide-scroll::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#8b5cf6', // Violeta principal
+                            600: '#7c3aed',
+                        },
+                        dark: {
+                            900: '#0f172a', // Fondo muy oscuro
+                            800: '#1e293b', // Paneles
+                            700: '#334155',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-900 text-white min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="glass-panel sticky top-0 z-50 border-b border-dark-700">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <i data-lucide="book-open" class="text-brand-500 w-8 h-8"></i>
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-pink-500">
+                    ManhwaLog
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
+                <div id="user-status" class="text-sm text-gray-400 flex items-center gap-2 mr-2">
+                    <span class="animate-pulse w-2 h-2 rounded-full bg-yellow-500"></span>
+                    Conectando...
+                </div>
+                
+                <!-- Botones Importar/Exportar -->
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('import-file').click()" class="p-2 text-gray-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar JSON">
+                        <i data-lucide="upload" class="w-5 h-5"></i>
+                    </button>
+                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(this)">
+                    
+                    <button onclick="exportData()" class="p-2 text-gray-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Exportar JSON">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
+        
+        <!-- BARRA DE HERRAMIENTAS SUPERIOR -->
+        <div class="space-y-4 mb-8">
+            
+            <!-- Fila 1: Filtros de Estado (Tabs) -->
+            <div class="flex bg-dark-800 p-1 rounded-lg shadow-lg overflow-x-auto hide-scroll w-full sm:w-fit">
+                <button onclick="filterStatus('all')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap" data-filter="all">Todos</button>
+                <button onclick="filterStatus('leyendo')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="leyendo">Leyendo</button>
+                <button onclick="filterStatus('completado')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="completado">Completados</button>
+                <button onclick="filterStatus('pendiente')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="pendiente">Por Leer</button>
+                <button onclick="filterStatus('drop')" class="filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap" data-filter="drop">Dropeados</button>
+            </div>
+
+            <!-- Fila 2: Búsqueda, Ordenamiento y Agregar -->
+            <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                
+                <!-- Buscador y Ordenamiento -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-grow max-w-3xl">
+                    <!-- Buscador -->
+                    <div class="relative flex-grow">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar por título..." 
+                               class="w-full bg-dark-800 border border-dark-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                    </div>
+
+                    <!-- Ordenamiento -->
+                    <div class="relative min-w-[200px]">
+                        <i data-lucide="arrow-up-down" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                        <select id="sort-select" onchange="handleSort(this.value)" class="w-full bg-dark-800 border border-dark-700 rounded-lg pl-10 pr-8 py-2 text-white focus:outline-none focus:border-brand-500 appearance-none cursor-pointer">
+                            <option value="recent_desc">Recientes (Nuevos)</option>
+                            <option value="recent_asc">Recientes (Antiguos)</option>
+                            <option value="rating_desc">Mejor Calificados</option>
+                            <option value="rating_asc">Peor Calificados</option>
+                            <option value="chapter_desc">Más Capítulos</option>
+                            <option value="chapter_asc">Menos Capítulos</option>
+                            <option value="title_asc">A-Z</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Botón Agregar -->
+                <button onclick="openModal()" class="w-full md:w-auto flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-2 rounded-lg font-semibold shadow-lg shadow-brand-500/20 transition-all transform hover:scale-105 active:scale-95">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    <span>Nuevo</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid de Manhwas -->
+        <div id="manhwa-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 min-h-[400px]">
+            <!-- Loading Skeleton -->
+            <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
+            <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
+            <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
+            <div class="glass-panel rounded-xl aspect-[3/4] animate-pulse bg-dark-800"></div>
+        </div>
+
+        <!-- Estado Vacío -->
+        <div id="empty-state" class="hidden text-center py-20 flex flex-col items-center justify-center">
+            <div class="bg-dark-800 p-4 rounded-full mb-4">
+                <i data-lucide="ghost" class="w-12 h-12 text-gray-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-300">No se encontraron resultados</h3>
+            <p class="text-gray-500 mt-2">Intenta ajustar los filtros o agrega un nuevo manhwa.</p>
+        </div>
+
+        <!-- Paginación -->
+        <div id="pagination-controls" class="flex justify-center items-center gap-4 mt-12 hidden">
+            <button onclick="changePage(-1)" id="prev-page" class="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <i data-lucide="chevron-left"></i>
+            </button>
+            <span class="text-gray-400 font-medium">Página <span id="current-page-display" class="text-white">1</span> de <span id="total-pages-display">1</span></span>
+            <button onclick="changePage(1)" id="next-page" class="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <i data-lucide="chevron-right"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- Modal para Agregar/Editar -->
+    <div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel bg-dark-800 w-full max-w-lg rounded-2xl shadow-2xl border border-dark-700 overflow-hidden transform transition-all scale-100 my-8">
+            <div class="px-6 py-4 border-b border-dark-700 flex justify-between items-center bg-dark-800/50">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i>
+                    Registrar Manhwa
+                </h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            
+            <form id="add-form" class="p-6 space-y-5">
+                <!-- Título -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Título</label>
+                    <input type="text" id="title" required class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: Solo Leveling">
+                </div>
+
+                <!-- Imagen URL con Preview -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">URL Portada</label>
+                    <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-lg px-4 py-3 mb-3" placeholder="https://...">
+                    
+                    <!-- Contenedor Preview -->
+                    <div class="relative w-full aspect-[3/4] max-h-64 bg-dark-900 rounded-lg overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group mx-auto">
+                        <img id="image-preview" src="" class="w-full h-full object-contain hidden" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
+                        <div class="text-gray-500 flex flex-col items-center gap-2" id="image-placeholder">
+                            <i data-lucide="image" class="w-8 h-8"></i>
+                            <span class="text-xs">Vista previa de la imagen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado y Puntuación -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Estado</label>
+                        <div class="relative">
+                            <select id="status" class="form-input w-full rounded-lg px-4 py-3 appearance-none cursor-pointer">
+                                <option value="leyendo">Leyendo</option>
+                                <option value="pendiente">Por Leer</option>
+                                <option value="completado">Completado</option>
+                                <option value="drop">Dropeado</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Nota (0-10)</label>
+                        <input type="number" id="rating" min="0" max="10" step="0.5" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: 9.5">
+                    </div>
+                </div>
+
+                <!-- Último Capítulo -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Capítulo Actual</label>
+                    <input type="number" id="chapter" class="form-input w-full rounded-lg px-4 py-3" placeholder="Ej: 45">
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-dark-700 mt-4">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-dark-700 transition-colors font-medium">Cancelar</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-lg text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20 transition-all transform hover:-translate-y-0.5">Guardar Manhwa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts de Firebase y Lógica -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // ==========================================
+        // CONFIGURACIÓN DE FIREBASE
+        // ==========================================
+        let firebaseConfig = null;
+        let appId = 'default-app';
+        
+        // 1. INTENTO DE CARGAR CONFIG DEL ENTORNO (CANVAS)
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
+        } 
+        // 2. CONFIGURACIÓN MANUAL (PARA GITHUB PAGES / LOCAL)
+        else {
+            // ⚠️ ⚠️ ⚠️ CONFIGURACIÓN OBLIGATORIA ⚠️ ⚠️ ⚠️
+            // Si ves un error de "Falta Configuración", DESCOMENTA las líneas de abajo
+            // y pega tu propia configuración de Firebase Console.
+            
+            firebaseConfig = {
+                apiKey: "AIzaSyA6VgAkqZsxgntU-xp9lpVeLx4GXMv4V6A",
+                authDomain: "bitahcora-manhwas.firebaseapp.com",
+                projectId: "bitahcora-manhwas",
+                storageBucket: "bitahcora-manhwas.firebasestorage.app",
+                messagingSenderId: "71530448207",
+                appId: "1:71530448207:web:1d140e9a8f1a1a80c2713a"
+            };
+            appId = "Bitahcora"; // Puedes cambiar esto si quieres
+            
+        }
+
+        // ==========================================
+        // VALIDACIÓN Y UI DE ERROR (No tocar)
+        // ==========================================
+        if (!firebaseConfig) {
+            document.body.innerHTML += `
+                <div style="position:fixed;inset:0;background:rgba(15, 23, 42, 0.98);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-align:center;padding:2rem;">
+                    <div style="background:#ef4444;padding:1rem;border-radius:50%;margin-bottom:1.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <h1 style="font-size:2rem;font-weight:bold;margin-bottom:1rem;">Falta Conectar Firebase</h1>
+                    <p style="max-width:600px;margin-bottom:2rem;line-height:1.6;color:#94a3b8;">
+                        Estás ejecutando la bitácora fuera del entorno de prueba, por lo que necesita conectarse a tu propia base de datos.
+                    </p>
+                    <div style="background:#1e293b;padding:1.5rem;border-radius:0.5rem;text-align:left;font-family:monospace;font-size:0.9rem;border:1px solid #334155;margin-bottom:2rem;width:100%;max-width:600px;overflow-x:auto;">
+                        <div style="color:#64748b;margin-bottom:0.5rem;">// Abre este archivo (index.html) y busca la línea ~280:</div>
+                        <span style="color:#c084fc">else</span> {<br>
+                        &nbsp;&nbsp;<span style="color:#22c55e">/* DESCOMENTA ESTO Y PEGA TUS DATOS */</span><br>
+                        &nbsp;&nbsp;<span style="color:#94a3b8">firebaseConfig = { ... }</span><br>
+                        }
+                    </div>
+                    <a href="https://console.firebase.google.com/" target="_blank" style="background:#2563eb;color:white;padding:0.75rem 1.5rem;border-radius:0.5rem;text-decoration:none;font-weight:bold;transition:all 0.2s;">Ir a Firebase Console</a>
+                </div>
+            `;
+            throw new Error("Firebase Config Missing: Debes editar el archivo index.html y agregar tu configuración de Firebase.");
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ==========================================
+        // ESTADO GLOBAL
+        // ==========================================
+        let currentUser = null;
+        let allManhwas = []; // Copia completa de datos
+        let filteredManhwas = []; // Datos después de filtros/search/sort
+        
+        // Estado de Filtros
+        let state = {
+            status: 'all',
+            search: '',
+            sort: 'recent_desc',
+            page: 1,
+            itemsPerPage: 8
+        };
+
+        // ==========================================
+        // FUNCIONES DE LÓGICA DE NEGOCIO
+        // ==========================================
+
+        // Procesar datos (Filtrar -> Buscar -> Ordenar -> Paginación)
+        function processData() {
+            let result = [...allManhwas];
+
+            // 1. Filtro por Estado
+            if (state.status !== 'all') {
+                result = result.filter(m => m.status === state.status);
+            }
+
+            // 2. Búsqueda por Texto
+            if (state.search) {
+                const query = state.search.toLowerCase();
+                result = result.filter(m => m.title.toLowerCase().includes(query));
+            }
+
+            // 3. Ordenamiento
+            result.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                
+                switch(state.sort) {
+                    case 'recent_desc': return dateB - dateA;
+                    case 'recent_asc': return dateA - dateB;
+                    case 'rating_desc': return (b.rating || 0) - (a.rating || 0);
+                    case 'rating_asc': return (a.rating || 0) - (b.rating || 0);
+                    case 'chapter_desc': return (b.chapter || 0) - (a.chapter || 0);
+                    case 'chapter_asc': return (a.chapter || 0) - (b.chapter || 0);
+                    case 'title_asc': return a.title.localeCompare(b.title);
+                    default: return dateB - dateA;
+                }
+            });
+
+            filteredManhwas = result;
+            updatePaginationUI();
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('manhwa-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Paginación: Cortar el array
+            const startIndex = (state.page - 1) * state.itemsPerPage;
+            const endIndex = startIndex + state.itemsPerPage;
+            const pageData = filteredManhwas.slice(startIndex, endIndex);
+
+            if (pageData.length === 0) {
+                grid.innerHTML = '';
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+                
+                grid.innerHTML = pageData.map(manhwa => {
+                    // Colores según estado
+                    let statusConfig = { color: 'gray', label: '?' };
+                    switch(manhwa.status) {
+                        case 'leyendo': statusConfig = { color: 'green', label: 'Leyendo' }; break;
+                        case 'completado': statusConfig = { color: 'blue', label: 'Completado' }; break;
+                        case 'pendiente': statusConfig = { color: 'yellow', label: 'Por Leer' }; break;
+                        case 'drop': statusConfig = { color: 'red', label: 'Abandonado' }; break;
+                    }
+                    
+                    const borderColor = `border-${statusConfig.color}-500/30`;
+                    const bgColor = `bg-${statusConfig.color}-500/20`;
+                    const textColor = `text-${statusConfig.color}-400`;
+                    const currentChapter = parseInt(manhwa.chapter) || 0;
+
+                    return `
+                    <div class="glass-panel rounded-xl overflow-hidden group relative hover:border-brand-500/50 transition-all duration-300 flex flex-col h-full shadow-lg">
+                        
+                        <!-- IMAGEN FORMATO 3:4 -->
+                        <div class="w-full aspect-[3/4] overflow-hidden relative bg-dark-900 group-hover:shadow-2xl transition-all">
+                            <img src="${manhwa.coverUrl || ''}" alt="${manhwa.title}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                 onerror="this.src='https://placehold.co/300x400/1e293b/94a3b8?text=Sin+Imagen'">
+                            
+                            <!-- Gradiente superpuesto -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-transparent to-transparent opacity-60"></div>
+                            
+                            <!-- Badge Estado -->
+                            <div class="absolute top-2 right-2 px-2 py-1 rounded text-[10px] uppercase font-bold border ${borderColor} ${bgColor} ${textColor} backdrop-blur-md shadow-md">
+                                ${statusConfig.label}
+                            </div>
+                        </div>
+
+                        <!-- CONTENIDO -->
+                        <div class="p-4 flex flex-col flex-grow relative -mt-6 z-10">
+                            <!-- Título -->
+                            <h3 class="text-lg font-bold text-white leading-tight mb-1 line-clamp-2 drop-shadow-md" title="${manhwa.title}">
+                                ${manhwa.title}
+                            </h3>
+                            
+                            <!-- Calificación -->
+                            <div class="flex items-center gap-1 text-yellow-400 text-xs font-bold mb-4">
+                                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                                <span>${manhwa.rating || '-'}</span>
+                            </div>
+
+                            <!-- MINI APARTADO DE CONTROL (FOOTER) -->
+                            <div class="mt-auto pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                                
+                                <!-- Botón Eliminar Discreto -->
+                                <button onclick="window.deleteItem('${manhwa.id}')" 
+                                        class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group/delete" title="Eliminar">
+                                    <i data-lucide="trash-2" class="w-4 h-4 group-hover/delete:scale-110 transition-transform"></i>
+                                </button>
+
+                                <!-- Controlador de Capítulos Rápido -->
+                                <div class="flex items-center bg-dark-800 rounded-lg border border-dark-700 shadow-sm overflow-hidden">
+                                    <button onclick="event.stopPropagation(); window.updateChapter('${manhwa.id}', ${currentChapter - 1})" 
+                                            class="px-3 py-1.5 text-gray-400 hover:text-white hover:bg-dark-700 active:bg-dark-600 transition-colors border-r border-dark-700">
+                                        <i data-lucide="minus" class="w-3 h-3"></i>
+                                    </button>
+                                    
+                                    <span class="px-2 py-1 text-xs font-mono text-brand-400 font-bold min-w-[3.5rem] text-center bg-dark-900/50 flex flex-col justify-center leading-none">
+                                        <span class="text-[9px] text-gray-500 uppercase">Cap.</span>
+                                        <span class="text-sm">${currentChapter}</span>
+                                    </span>
+
+                                    <button onclick="event.stopPropagation(); window.updateChapter('${manhwa.id}', ${currentChapter + 1})" 
+                                            class="px-3 py-1.5 text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700 transition-colors">
+                                        <i data-lucide="plus" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function updatePaginationUI() {
+            const totalPages = Math.ceil(filteredManhwas.length / state.itemsPerPage) || 1;
+            const container = document.getElementById('pagination-controls');
+            
+            // Asegurar que la página actual es válida
+            if (state.page > totalPages) state.page = totalPages;
+            if (state.page < 1) state.page = 1;
+
+            document.getElementById('current-page-display').innerText = state.page;
+            document.getElementById('total-pages-display').innerText = totalPages;
+            
+            document.getElementById('prev-page').disabled = state.page === 1;
+            document.getElementById('next-page').disabled = state.page === totalPages;
+
+            // Mostrar/Ocultar paginación si es necesario
+            if (totalPages > 1) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // EXPORTADAS A WINDOW (UI)
+        // ==========================================
+
+        window.filterStatus = (status) => {
+            state.status = status;
+            state.page = 1; // Resetear a pag 1
+            
+            // Update UI buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const isSelected = btn.dataset.filter === status;
+                btn.className = isSelected 
+                    ? 'filter-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap'
+                    : 'filter-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap';
+            });
+            processData();
+        };
+
+        window.handleSearch = (value) => {
+            state.search = value;
+            state.page = 1;
+            processData();
+        };
+
+        window.handleSort = (value) => {
+            state.sort = value;
+            processData();
+        };
+
+        window.changePage = (direction) => {
+            state.page += direction;
+            processData();
+            // Scroll suave al top del grid
+            document.getElementById('manhwa-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.updateImagePreview = (url) => {
+            const img = document.getElementById('image-preview');
+            const placeholder = document.getElementById('image-placeholder');
+            
+            if (url) {
+                img.src = url;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        };
+
+        // --- IMPORTAR / EXPORTAR ---
+
+        window.exportData = () => {
+            if (!allManhwas.length) return alert("No hay datos para exportar.");
+            
+            // Limpiar datos internos de firebase antes de exportar
+            const cleanData = allManhwas.map(({id, createdAt, ...rest}) => rest);
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanData));
+            
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "manhwalog_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        };
+
+        window.importData = (inputElement) => {
+            if (!currentUser) return alert("Debes estar conectado.");
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if (!Array.isArray(json)) throw new Error("Formato inválido: Debe ser un array.");
+
+                    const confirmMsg = `Se encontraron ${json.length} elementos. ¿Deseas importarlos? Esto los agregará a tu lista actual.`;
+                    if (!confirm(confirmMsg)) return;
+
+                    const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
+                    
+                    let count = 0;
+                    for (const item of json) {
+                        // Validación básica
+                        if (item.title) {
+                            await addDoc(colRef, {
+                                title: item.title,
+                                coverUrl: item.coverUrl || '',
+                                status: item.status || 'pendiente',
+                                rating: item.rating || 0,
+                                chapter: item.chapter || 0,
+                                createdAt: serverTimestamp()
+                            });
+                            count++;
+                        }
+                    }
+                    alert(`${count} Manhwas importados correctamente.`);
+                    inputElement.value = ''; // Reset input
+                } catch (err) {
+                    console.error(err);
+                    alert("Error al leer el archivo JSON. Asegúrate de que el formato sea correcto.");
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // --- CRUD BÁSICO ---
+
+        window.updateChapter = async (id, newChapter) => {
+            if (newChapter < 0) return; // Prevenir capítulos negativos
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
+                await updateDoc(docRef, { chapter: newChapter });
+            } catch (e) { console.error(e); }
+        };
+
+        window.deleteItem = async (id) => {
+            if(!confirm("¿Eliminar permanentemente?")) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
+                await deleteDoc(docRef);
+            } catch (e) { console.error(e); }
+        };
+
+        // Form Submit
+        const form = document.getElementById('add-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return alert("Error de auth");
+
+            const title = document.getElementById('title').value;
+            const coverUrl = document.getElementById('coverUrl').value;
+            const status = document.getElementById('status').value;
+            const rating = document.getElementById('rating').value;
+            const chapter = document.getElementById('chapter').value;
+
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
+                await addDoc(colRef, {
+                    title,
+                    coverUrl,
+                    status,
+                    rating: parseFloat(rating) || 0,
+                    chapter: parseInt(chapter) || 0,
+                    createdAt: serverTimestamp()
+                });
+                closeModal();
+                form.reset();
+                window.updateImagePreview(''); // Reset preview
+            } catch (error) {
+                alert("Error al guardar");
+            }
+        });
+
+        // ==========================================
+        // INICIALIZACIÓN
+        // ==========================================
+        
+        async function initAuth() {
+            const statusEl = document.getElementById('user-status');
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                statusEl.innerHTML = `<span class="text-red-500">Error</span>`;
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            const statusEl = document.getElementById('user-status');
+            if (user) {
+                currentUser = user;
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Conectado`;
+                
+                // Listener de Firestore
+                const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
+                onSnapshot(colRef, (snapshot) => {
+                    allManhwas = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    processData(); // Ejecutar pipeline de renderizado
+                });
+
+            } else {
+                currentUser = null;
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Offline`;
+                allManhwas = [];
+                processData();
+            }
+        });
+
+        initAuth();
+
+        // Modal Helpers
+        window.openModal = () => document.getElementById('modal').classList.remove('hidden');
+        window.closeModal = () => document.getElementById('modal').classList.add('hidden');
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+
+        // Init Icons
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>
