@@ -706,6 +706,28 @@
             }, 3000);
         };
 
+        function updatePaginationUI() {
+            const totalPages = Math.ceil(filteredManhwas.length / state.itemsPerPage) || 1;
+            const container = document.getElementById('pagination-controls');
+            
+            // Asegurar que la página actual es válida
+            if (state.page > totalPages) state.page = totalPages;
+            if (state.page < 1) state.page = 1;
+
+            document.getElementById('current-page-display').innerText = state.page;
+            document.getElementById('total-pages-display').innerText = totalPages;
+            
+            document.getElementById('prev-page').disabled = state.page === 1;
+            document.getElementById('next-page').disabled = state.page === totalPages;
+
+            // Mostrar/Ocultar paginación si es necesario
+            if (totalPages > 1) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
         // --- AUTH & INIT ---
         async function initAuth() {
             const statusEl = document.getElementById('user-status');
