@@ -172,8 +172,8 @@
                         <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
                     </div>
 
-                    <!-- Botón Agregar (Móvil Floating Action Button style en desktop inline) -->
-                    <button onclick="openModal()" class="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
+                    <!-- Botón Agregar (Arreglado: llama a openEditModal) -->
+                    <button onclick="window.openEditModal()" class="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
                         <i data-lucide="plus" class="w-5 h-5"></i>
                         <span class="hidden sm:inline">Nuevo</span>
                     </button>
@@ -197,6 +197,8 @@
             </div>
             <h3 class="text-xl font-semibold text-white mb-2">Sin resultados</h3>
             <p class="text-slate-500 text-sm max-w-[200px] mx-auto">Prueba otro filtro o agrega un nuevo manhwa.</p>
+            <!-- Botón Arreglado -->
+            <button onclick="window.openEditModal()" class="mt-6 text-brand-400 hover:text-brand-300 text-sm font-medium">Agregar Nuevo</button>
         </div>
 
         <!-- Paginación -->
@@ -502,11 +504,14 @@
 
                     <div class="p-3 flex flex-col flex-grow relative -mt-4 z-10 pointer-events-none">
                         <div class="pointer-events-auto">
-                            <div class="flex justify-between items-start gap-2 mb-1">
-                                <h3 class="text-sm font-bold text-white leading-tight line-clamp-2 hover:text-brand-400 cursor-pointer transition-colors" onclick="window.openEditModal('${m.id}')">
-                                    ${m.title}
-                                </h3>
-                                ${m.readingUrl ? `<a href="${m.readingUrl}" target="_blank" class="text-slate-500 hover:text-brand-400 shrink-0"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>` : ''}
+                            <!-- Título con altura fija para alineación perfecta (h-10 = 2.5rem = ~2 líneas) -->
+                            <div class="h-10 mb-1">
+                                <div class="flex justify-between items-start gap-2">
+                                    <h3 class="text-sm font-bold text-white leading-tight line-clamp-2 hover:text-brand-400 cursor-pointer transition-colors" onclick="window.openEditModal('${m.id}')">
+                                        ${m.title}
+                                    </h3>
+                                    ${m.readingUrl ? `<a href="${m.readingUrl}" target="_blank" class="text-slate-500 hover:text-brand-400 shrink-0"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>` : ''}
+                                </div>
                             </div>
                             
                             <div class="flex items-center justify-between text-[10px] text-slate-500 mb-3 border-t border-white/5 pt-2">
