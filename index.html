@@ -820,21 +820,35 @@
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     let count = 0;
                     for (const item of json) {
-                        const title = item.title || item.titulo || item.nombre;
+                        // Mapeo priorizando las claves en español del nuevo formato
+                        const title = item.titulo || item.title || item.nombre;
+                        
                         if(title) {
+                            // Normalización de is_favorite ("0"/"1" a boolean)
+                            const isFav = item.is_favorite === "1" || item.is_favorite === 1 || item.isFavorite === true;
+
+                            // Normalización básica de estado
+                            const rawStatus = (item.estado || item.status || 'pendiente').toLowerCase();
+                            let validStatus = 'pendiente';
+                            if (rawStatus.includes('ley')) validStatus = 'leyendo';
+                            else if (rawStatus.includes('comp') || rawStatus.includes('term')) validStatus = 'completado';
+                            else if (rawStatus.includes('drop') || rawStatus.includes('aband')) validStatus = 'drop';
+
                             await addDoc(colRef, {
                                 title: String(title),
-                                coverUrl: item.coverUrl || item.imagen_url || '',
-                                status: (item.status || 'pendiente').toLowerCase(),
-                                rating: parseFloat(item.rating || item.calificacion) || 0,
-                                chapter: parseInt(item.chapter || item.capitulo_actual) || 0,
-                                totalChapters: parseInt(item.totalChapters || item.total_capitulos) || 0,
+                                // Mapeo de campos nuevos (imagen_url, url_lectura, etc.)
+                                coverUrl: item.imagen_url || item.coverUrl || '',
+                                status: validStatus,
+                                rating: parseFloat(item.calificacion || item.rating) || 0,
+                                chapter: parseInt(item.capitulo_actual || item.chapter) || 0,
+                                totalChapters: parseInt(item.total_capitulos || item.totalChapters) || 0,
                                 autor: item.autor || '',
                                 genero: item.genero || '',
-                                readingUrl: item.readingUrl || item.url_lectura || '',
-                                notes: item.notes || item.notas || '',
-                                isFavorite: !!item.isFavorite,
-                                createdAt: serverTimestamp()
+                                readingUrl: item.url_lectura || item.readingUrl || '',
+                                notes: item.notas || item.notes || '',
+                                isFavorite: isFav,
+                                createdAt: serverTimestamp(),
+                                updatedAt: serverTimestamp()
                             });
                             count++;
                         }
