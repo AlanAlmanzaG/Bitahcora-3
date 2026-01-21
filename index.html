@@ -266,15 +266,16 @@
             // ⚠️ ⚠️ ⚠️ CONFIGURACIÓN OBLIGATORIA ⚠️ ⚠️ ⚠️
             // Si ya lo configuraste, asegúrate de que esté descomentado (sin /* */).
             
-            firebaseConfig = {
-                apiKey: "AIzaSyA6VgAkqZsxgntU-xp9lpVeLx4GXMv4V6A",
-                authDomain: "bitahcora-manhwas.firebaseapp.com",
-                projectId: "bitahcora-manhwas",
-                storageBucket: "bitahcora-manhwas.firebasestorage.app",
-                messagingSenderId: "71530448207",
-                appId: "1:71530448207:web:1d140e9a8f1a1a80c2713a"
+            /* firebaseConfig = {
+                apiKey: "AQUI_TU_API_KEY",
+                authDomain: "TU_PROYECTO.firebaseapp.com",
+                projectId: "TU_PROYECTO_ID",
+                storageBucket: "TU_PROYECTO.appspot.com",
+                messagingSenderId: "NUMEROS...",
+                appId: "APP_ID..."
             };
             appId = "mi-coleccion-manhwas";
+            */
         }
 
         // ==========================================
@@ -541,7 +542,7 @@
                         // INTENTO DE MAPEO INTELIGENTE
                         // Busca campos comunes en español e inglés
                         const title = item.title || item.titulo || item.nombre || item.name || item.Title || item.Name;
-                        const cover = item.coverUrl || item.cover || item.image || item.img || item.imagen || item.portada || '';
+                        const cover = item.coverUrl || item.cover || item.image || item.img || item.imagen || item.portada || item.imagen_url || '';
                         
                         // Normalizar Estado
                         let statusRaw = String(item.status || item.estado || 'pendiente').toLowerCase();
@@ -551,7 +552,7 @@
                         else if (statusRaw.includes('drop') || statusRaw.includes('aband')) status = 'drop';
 
                         const rating = item.rating || item.nota || item.calificacion || item.score || 0;
-                        const chapter = item.chapter || item.capitulo || item.chap || 0;
+                        const chapter = item.chapter || item.capitulo || item.chap || item.capitulo_actual || 0;
 
                         if (title) {
                             await addDoc(colRef, {
