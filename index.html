@@ -21,11 +21,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --brand-500: #8b5cf6; /* Violeta Default */
-            --brand-600: #7c3aed;
-        }
-
         body { font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         .glass-panel {
@@ -43,9 +38,9 @@
         }
         
         .form-input:focus {
-            border-color: var(--brand-500);
+            border-color: #8b5cf6;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); /* Nota: El color del shadow no acepta var() facilmente en tailwind cdn config, se queda statico o requiere plugin */
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
 
         .hide-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
@@ -57,16 +52,25 @@
         
         @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-enter { animation: scaleIn 0.2s ease-out forwards; }
+
+        /* Clases para ocultar/mostrar flechas suavemente */
+        .scroll-btn {
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scroll-btn.hidden-btn {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
     </style>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: { 
-                            500: 'var(--brand-500)', 
-                            600: 'var(--brand-600)' 
-                        },
+                        brand: { 500: '#8b5cf6', 600: '#7c3aed' },
                         dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' }
                     }
                 }
@@ -78,45 +82,35 @@
 
     <!-- Header -->
     <header class="glass-panel sticky top-0 z-50 border-b border-dark-700 shadow-lg shadow-black/20 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="flex items-center justify-between w-full sm:w-auto">
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="bg-brand-600 p-1.5 sm:p-2 rounded-lg shadow-lg shadow-brand-500/20 transition-colors duration-300">
-                        <i data-lucide="book-open" class="text-white w-5 h-5 sm:w-6 sm:h-6"></i>
-                    </div>
-                    <h1 class="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                        BITAHCORA
-                    </h1>
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="bg-brand-600 p-1.5 sm:p-2 rounded-lg shadow-lg shadow-brand-500/20">
+                    <i data-lucide="book-open" class="text-white w-5 h-5 sm:w-6 sm:h-6"></i>
                 </div>
-                
-                <!-- Theme Selector Mobile -->
-                <div class="flex sm:hidden gap-2 items-center" id="mobile-theme-selector">
-                    <!-- Se llena con JS -->
-                </div>
+                <h1 class="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                    BITAHCORA
+                </h1>
             </div>
             
-            <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
-                <!-- Theme Selector Desktop -->
-                <div class="hidden sm:flex gap-1.5 items-center mr-2 bg-dark-800/50 p-1 rounded-full border border-dark-700" id="desktop-theme-selector">
-                    <!-- Se llena con JS -->
-                </div>
-
+            <div class="flex items-center gap-2 sm:gap-4">
                 <button id="install-btn" class="hidden flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-pink-500/20 transition-all animate-pulse">
-                    <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">App</span>
+                    <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Instalar App</span>
                 </button>
 
-                <!-- Auth Button -->
+                <!-- Botón de Autenticación (Google) -->
                 <button id="auth-btn" onclick="handleAuth()" class="flex items-center gap-2 bg-dark-800 hover:bg-dark-700 border border-dark-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
                     <i data-lucide="log-in" class="w-4 h-4"></i> Acceder
                 </button>
-
-                <div class="h-6 w-px bg-dark-700 mx-1"></div>
+                
+                <!-- Status oculto para lógica interna -->
+                <div id="user-status" class="hidden"></div>
 
                 <div class="flex gap-1 sm:gap-2">
                     <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar">
                         <i data-lucide="upload" class="w-5 h-5"></i>
                     </button>
-                    <input type="file" id="import-file" accept=".json" class="hidden" onclick="this.value=null" onchange="importData(this)">
+                    <!-- Aceptamos también .sql y .csv -->
+                    <input type="file" id="import-file" accept=".json,.sql,.csv,.txt" class="hidden" onclick="this.value=null" onchange="importData(this)">
                     
                     <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Backup">
                         <i data-lucide="download" class="w-5 h-5"></i>
@@ -129,31 +123,10 @@
     <!-- Main Content -->
     <main class="flex-grow w-full max-w-7xl mx-auto px-3 sm:px-4 py-6">
         
-        <!-- ÚLTIMA LECTURA (Nuevo) -->
-        <div id="last-read-container" class="mb-6 hidden fade-enter">
-            <div class="glass-panel p-4 rounded-xl border-l-4 border-brand-500 flex items-center gap-4 relative overflow-hidden">
-                <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-dark-900/20 to-transparent pointer-events-none"></div>
-                
-                <div class="h-16 w-12 shrink-0 rounded-md overflow-hidden bg-dark-900 shadow-md">
-                    <img id="lr-cover" src="" class="w-full h-full object-cover opacity-80">
-                </div>
-                
-                <div class="flex-grow min-w-0 z-10">
-                    <p class="text-[10px] text-brand-400 font-bold uppercase tracking-wider mb-0.5">Continuar Leyendo</p>
-                    <h3 id="lr-title" class="text-lg font-bold text-white truncate leading-tight">Título</h3>
-                    <p class="text-xs text-slate-400">Capítulo <span id="lr-chapter" class="text-white font-mono">0</span></p>
-                </div>
-
-                <button id="lr-btn" class="shrink-0 bg-brand-600 hover:bg-brand-500 text-white p-3 rounded-full shadow-lg shadow-brand-500/20 transition-all z-10">
-                    <i data-lucide="play" class="w-5 h-5 fill-current"></i>
-                </button>
-            </div>
-        </div>
-
         <!-- DASHBOARD (2x2 Mobile) -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-slate-500">
-                <div class="p-2 sm:p-3 bg-slate-500/10 rounded-lg text-slate-400"><i data-lucide="library" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-brand-500">
+                <div class="p-2 sm:p-3 bg-brand-500/10 rounded-lg text-brand-500"><i data-lucide="library" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
                 <div>
                     <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Total</p>
                     <p class="text-xl sm:text-2xl font-bold text-white" id="stat-total">0</p>
@@ -259,16 +232,22 @@
         </div>
     </main>
 
-    <!-- Scroll Buttons -->
-    <div class="fixed bottom-6 left-6 z-[100] flex flex-col gap-2 opacity-80 hover:opacity-100 transition-opacity">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg"><i data-lucide="arrow-up" class="w-5 h-5"></i></button>
-        <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg"><i data-lucide="arrow-down" class="w-5 h-5"></i></button>
+    <!-- Scroll Buttons Inteligentes -->
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col gap-2">
+        <button id="scroll-up-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg">
+            <i data-lucide="arrow-up" class="w-5 h-5"></i>
+        </button>
+        <button id="scroll-down-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" 
+                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg">
+            <i data-lucide="arrow-down" class="w-5 h-5"></i>
+        </button>
     </div>
 
     <!-- TOASTS -->
     <div id="toast-container" class="fixed top-4 right-4 sm:bottom-6 sm:top-auto sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none w-full max-w-[320px] px-4 sm:px-0"></div>
 
-    <!-- NUEVO MODAL DE CONFIRMACIÓN (Alerta Estilizada) -->
+    <!-- NUEVO MODAL DE CONFIRMACIÓN -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
         <div class="glass-panel bg-dark-800 w-full max-w-sm rounded-2xl shadow-2xl border border-dark-700 p-6 transform transition-all scale-100 modal-enter">
             <div class="mb-5 text-center">
@@ -285,7 +264,7 @@
         </div>
     </div>
 
-    <!-- MODAL REGISTRO -->
+    <!-- MODAL REGISTRO (SIN AUTOR, GÉNEROS NI NOTAS) -->
     <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[90] hidden flex items-center justify-center sm:p-4 overflow-y-auto">
         <div class="glass-panel bg-dark-900 sm:bg-dark-800 w-full sm:max-w-xl sm:rounded-2xl shadow-2xl border-0 sm:border border-dark-700 h-full sm:h-auto overflow-y-auto transform transition-all">
             <div class="sticky top-0 z-10 px-4 py-4 border-b border-dark-700 flex justify-between items-center bg-dark-900/95 sm:bg-dark-800/95 backdrop-blur-md">
@@ -385,7 +364,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // ==========================================
         // CONFIGURACIÓN (AUTO O MANUAL)
@@ -482,38 +461,6 @@
             });
         };
 
-        // --- THEME & COLOR LOGIC ---
-        const colors = {
-            violet: { '500': '#8b5cf6', '600': '#7c3aed' },
-            blue: { '500': '#3b82f6', '600': '#2563eb' },
-            green: { '500': '#22c55e', '600': '#16a34a' },
-            pink: { '500': '#ec4899', '600': '#db2777' },
-            orange: { '500': '#f97316', '600': '#ea580c' }
-        };
-
-        window.setTheme = (colorName) => {
-            const root = document.documentElement;
-            const theme = colors[colorName];
-            root.style.setProperty('--brand-500', theme['500']);
-            root.style.setProperty('--brand-600', theme['600']);
-            localStorage.setItem('theme', colorName);
-            renderThemeSelectors();
-        };
-
-        function renderThemeSelectors() {
-            const active = localStorage.getItem('theme') || 'violet';
-            const html = Object.keys(colors).map(c => `
-                <button onclick="setTheme('${c}')" class="w-6 h-6 rounded-full border-2 ${active === c ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'} transition-all" style="background-color: ${colors[c]['500']}"></button>
-            `).join('');
-            
-            document.getElementById('desktop-theme-selector').innerHTML = html;
-            document.getElementById('mobile-theme-selector').innerHTML = html;
-        }
-
-        // Init theme
-        window.setTheme(localStorage.getItem('theme') || 'violet');
-
-
         // --- APP LOGIC ---
         let currentUser = null;
         let allManhwas = [];
@@ -577,37 +524,8 @@
 
             filteredManhwas = result;
             updateStats();
-            updateLastRead();
             updatePaginationUI();
             renderGrid();
-        }
-
-        function updateLastRead() {
-            const container = document.getElementById('last-read-container');
-            if (allManhwas.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-
-            // Encontrar el último actualizado (leyendo)
-            const reading = allManhwas
-                .filter(m => m.status === 'leyendo')
-                .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-
-            if (reading.length > 0) {
-                const last = reading[0];
-                document.getElementById('lr-title').innerText = last.title;
-                document.getElementById('lr-chapter').innerText = last.chapter;
-                document.getElementById('lr-cover').src = last.coverUrl || '';
-                
-                // Botón continuar: suma 1 cap
-                const btn = document.getElementById('lr-btn');
-                btn.onclick = () => window.updateChapter(last.id, (parseInt(last.chapter)||0) + 1, last.totalChapters, last.pubStatus, last.status);
-
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
         }
 
         function renderGrid() {
@@ -702,7 +620,7 @@
 
                         ${m.readingUrl ? `
                         <a href="${m.readingUrl}" target="_blank" onclick="event.stopPropagation()"
-                           class="absolute bottom-12 right-2 p-2.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg z-20 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">
+                           class="absolute bottom-12 right-2 p-2.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg z-20 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0" style="bottom: 12px;">
                             <i data-lucide="book-open" class="w-4 h-4"></i>
                         </a>` : ''}
 
@@ -726,8 +644,10 @@
                         </div>
 
                         <div class="mt-auto flex items-center justify-between gap-2 pointer-events-auto">
+                            <!-- Botón Eliminar (Solo Hover) -->
                             <button onclick="window.deleteItem('${m.id}')" class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             
+                            <!-- Contador de Capítulos -->
                             <div class="flex items-center bg-dark-900 rounded-lg border border-dark-700 shadow-sm overflow-hidden h-8 ml-auto">
                                 <button onclick="window.updateChapter('${m.id}', ${current - 1}, ${total}, '${m.pubStatus}', '${m.status}')" class="px-2.5 h-full text-slate-400 hover:text-white hover:bg-dark-700 border-r border-dark-700"><i data-lucide="minus" class="w-3 h-3"></i></button>
                                 <div class="px-2 h-full flex items-center justify-center min-w-[36px]">
@@ -967,13 +887,28 @@
             const statusEl = document.getElementById('user-status');
             const authBtn = document.getElementById('auth-btn');
             
+            // Check for initial token provided by environment
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                 await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                 // Try anonymous fallback if Google Auth not actively used, 
+                 // or just wait for explicit user action. 
+                 // For now, we rely on user clicking "Acceder" or persisted session.
+                 // If we want auto-anonymous for testing:
+                 // await signInAnonymously(auth);
+            }
+
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUser = user;
                     if(statusEl) statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> <span class="text-slate-300">En línea</span>`;
                     
-                    authBtn.innerHTML = `<img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+user.email}" class="w-5 h-5 rounded-full"> <span>Salir</span>`;
-                    
+                    if (user.isAnonymous) {
+                         authBtn.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> Anónimo`;
+                    } else {
+                         authBtn.innerHTML = `<img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+user.email}" class="w-5 h-5 rounded-full"> <span>Salir</span>`;
+                    }
+
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     onSnapshot(colRef, (snapshot) => {
                         allManhwas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -989,6 +924,24 @@
                 }
             });
         }
+        
+        // Handle Auth Click
+        window.handleAuth = async () => {
+            if (currentUser) {
+                if(await showConfirm("Cerrar Sesión", "¿Quieres salir de tu cuenta?", true, "Salir")) {
+                    await signOut(auth);
+                }
+            } else {
+                try {
+                    await signInWithPopup(auth, googleProvider);
+                } catch (e) {
+                    console.error(e);
+                    // Fallback to anonymous for preview if google fails
+                    // await signInAnonymously(auth);
+                    showToast('Error al iniciar sesión', 'error');
+                }
+            }
+        };
 
         initAuth();
 
@@ -1030,100 +983,64 @@
         };
 
         window.importData = (input) => {
-            if (!currentUser) return showToast("Conecta primero para importar", 'error');
+            if (!currentUser) return showToast("Conecta primero", 'error');
             const file = input.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    let json;
-                    try {
-                        json = JSON.parse(e.target.result);
-                    } catch (error) {
-                        return alert("Error en el archivo JSON: Verifica que no tenga comas al final o errores de sintaxis.\n\nTip: Usa jsonlint.com para validarlo.");
-                    }
+                    let json = JSON.parse(e.target.result);
 
-                    // Normalizar si es un objeto envuelto
+                    // --- LÓGICA PARA DETECTAR FORMATO PHPMYADMIN ---
+                    if (Array.isArray(json)) {
+                        // Buscamos el elemento que contiene los datos de la tabla
+                        const phpMyAdminTable = json.find(item => item.type === "table" && Array.isArray(item.data));
+                        if (phpMyAdminTable) {
+                            json = phpMyAdminTable.data; // Extraemos la lista real de manhwas
+                        }
+                    }
+                    // ------------------------------------------------
+
                     if (!Array.isArray(json)) json = json.manhwas || json.data || [json];
+                    if (!Array.isArray(json)) throw new Error("Formato inválido");
                     
-                    if (!Array.isArray(json)) throw new Error("El archivo no contiene una lista válida.");
-                    
-                    if(!(await showConfirm("Importar Respaldo", `Se encontraron ${json.length} manhwas.\n¿Deseas importarlos ahora?`, false, "Sí, Importar"))) return;
+                    if(!(await showConfirm("Importar Datos", `¿Importar ${json.length} elementos?`, false, "Importar"))) return;
                     
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     let count = 0;
-                    let errors = 0;
-
-                    showToast("Iniciando importación... espera un momento", 'success');
-
                     for (const item of json) {
-                        // 1. MAPEO DE CAMPOS (Español JSON -> App)
-                        // Busca 'titulo' (tu json) O 'title' (backup app)
-                        const title = item.titulo || item.title || item.nombre || item.name;
-                        
+                        const title = item.titulo || item.title || item.nombre;
                         if(title) {
-                            // Mapeo de imagen
-                            const coverUrl = item.imagen_url || item.coverUrl || item.img || '';
-                            
-                            // Mapeo de URL lectura
-                            const readingUrl = item.url_lectura || item.readingUrl || item.link || '';
-
-                            // Mapeo de Status (Tu JSON usa "Completado", "Pendiente")
-                            let rawStatus = (item.estado || item.status || 'pendiente').toLowerCase().trim();
+                            const isFav = item.is_favorite === "1" || item.is_favorite === 1 || item.isFavorite === true;
+                            const rawStatus = (item.estado || item.status || 'pendiente').toLowerCase();
                             let validStatus = 'pendiente';
                             if (rawStatus.includes('ley')) validStatus = 'leyendo';
                             else if (rawStatus.includes('pausa')) validStatus = 'pausado';
-                            else if (rawStatus.includes('comp') || rawStatus.includes('term') || rawStatus.includes('fin')) validStatus = 'completado';
+                            else if (rawStatus.includes('comp') || rawStatus.includes('term')) validStatus = 'completado';
                             else if (rawStatus.includes('drop') || rawStatus.includes('aband')) validStatus = 'drop';
 
-                            // Mapeo de Favorito (Tu JSON usa "0" o "1")
-                            let isFav = false;
-                            if (item.is_favorite == "1" || item.is_favorite === 1 || item.isFavorite === true) isFav = true;
-
-                            // Mapeo de Números (Tu JSON los tiene como strings "73")
-                            const chapter = parseInt(item.capitulo_actual || item.chapter) || 0;
-                            const totalChapters = parseInt(item.total_capitulos || item.totalChapters) || 0;
-                            const rating = parseFloat(item.calificacion || item.rating) || 0;
-
-                            // Preparar objeto limpio
-                            const docData = {
-                                title: String(title).trim(),
-                                coverUrl: coverUrl,
-                                readingUrl: readingUrl,
+                            await addDoc(colRef, {
+                                title: String(title),
+                                coverUrl: item.imagen_url || item.coverUrl || '',
                                 status: validStatus,
-                                pubStatus: 'terminado', // Por defecto asumimos terminado si no viene dato
-                                rating: rating,
-                                chapter: chapter,
-                                totalChapters: totalChapters,
+                                pubStatus: item.pubStatus || 'terminado',
+                                rating: parseFloat(item.calificacion || item.rating) || 0,
+                                chapter: parseInt(item.capitulo_actual || item.chapter) || 0,
+                                totalChapters: parseInt(item.total_capitulos || item.totalChapters) || 0,
+                                readingUrl: item.url_lectura || item.readingUrl || '',
+                                // Eliminamos autor, genero y notas como pediste anteriormente
                                 isFavorite: isFav,
                                 createdAt: serverTimestamp(),
                                 updatedAt: serverTimestamp()
-                            };
-
-                            // Subir a Firebase
-                            await addDoc(colRef, docData);
+                            });
                             count++;
-                        } else {
-                            console.warn("Elemento saltado por falta de título:", item);
-                            errors++;
                         }
                     }
-                    
-                    if (count > 0) {
-                        showToast(`¡Éxito! ${count} importados.`, 'success');
-                        setTimeout(() => window.location.reload(), 1500); // Recargar para ver cambios
-                    } else {
-                        showToast("No se pudo importar ningún manhwa.", 'error');
-                    }
-                    
-                } catch(err) { 
-                    console.error(err);
-                    showToast("Error crítico al importar: " + err.message, 'error'); 
-                }
-                input.value = ''; // Limpiar input para permitir reintentar
+                    showToast(`${count} importados`, 'success');
+                } catch(err) { showToast("Error al importar", 'error'); }
+                input.value = '';
             };
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8');
         };
 
         lucide.createIcons();
