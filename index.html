@@ -49,6 +49,10 @@
         
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .fade-enter { animation: slideIn 0.3s ease-out forwards; }
+        
+        /* Animación para el modal de confirmación */
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-enter { animation: scaleIn 0.2s ease-out forwards; }
     </style>
     <script>
         tailwind.config = {
@@ -78,6 +82,10 @@
             </div>
             
             <div class="flex items-center gap-2 sm:gap-4">
+                <button id="install-btn" class="hidden flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-pink-500/20 transition-all animate-pulse">
+                    <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Instalar App</span>
+                </button>
+
                 <div id="user-status" class="hidden sm:flex text-xs font-medium px-3 py-1.5 rounded-full bg-dark-800 border border-dark-700 items-center gap-2">
                     <span class="animate-pulse w-2 h-2 rounded-full bg-yellow-500"></span>
                     <span class="text-slate-400">Conectando...</span>
@@ -217,6 +225,23 @@
 
     <!-- TOASTS -->
     <div id="toast-container" class="fixed top-4 right-4 sm:bottom-6 sm:top-auto sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none w-full max-w-[320px] px-4 sm:px-0"></div>
+
+    <!-- NUEVO MODAL DE CONFIRMACIÓN (Alerta Estilizada) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+        <div class="glass-panel bg-dark-800 w-full max-w-sm rounded-2xl shadow-2xl border border-dark-700 p-6 transform transition-all scale-100 modal-enter">
+            <div class="mb-5 text-center">
+                <div class="w-14 h-14 rounded-full bg-dark-700/50 border border-dark-600 flex items-center justify-center mb-4 mx-auto" id="confirm-icon-container">
+                    <i data-lucide="alert-triangle" class="w-7 h-7 text-white" id="confirm-icon"></i>
+                </div>
+                <h3 id="confirm-title" class="text-xl font-bold text-white mb-2">¿Estás seguro?</h3>
+                <p id="confirm-message" class="text-slate-400 text-sm leading-relaxed">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-300 bg-dark-700 hover:bg-dark-600 border border-dark-600 transition-colors">Cancelar</button>
+                <button id="confirm-ok" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20 transition-all">Eliminar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL REGISTRO -->
     <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[90] hidden flex items-center justify-center sm:p-4 overflow-y-auto">
@@ -364,7 +389,14 @@
             e.preventDefault();
             deferredPrompt = e;
             const installBtn = document.getElementById('install-btn');
-            // installBtn.classList.remove('hidden'); // Opcional, botón custom
+            installBtn.classList.remove('hidden');
+            
+            installBtn.addEventListener('click', async () => {
+                installBtn.classList.add('hidden');
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            });
         });
 
         if ('serviceWorker' in navigator) {
@@ -374,6 +406,51 @@
                     .catch(err => console.log('SW fallo:', err));
             });
         }
+
+        // --- CUSTOM CONFIRM MODAL LOGIC ---
+        window.showConfirm = (title, message, isDestructive = true, confirmText = "Aceptar") => {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const titleEl = document.getElementById('confirm-title');
+                const msgEl = document.getElementById('confirm-message');
+                const cancelBtn = document.getElementById('confirm-cancel');
+                const okBtn = document.getElementById('confirm-ok');
+                const iconEl = document.getElementById('confirm-icon');
+                const iconContainer = document.getElementById('confirm-icon-container');
+
+                titleEl.innerText = title;
+                msgEl.innerText = message;
+                okBtn.innerText = confirmText;
+
+                // Estilos dinámicos según tipo de alerta
+                if (isDestructive) {
+                    okBtn.className = "flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20 transition-all";
+                    iconEl.setAttribute('data-lucide', 'alert-triangle');
+                    iconContainer.className = "w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 mx-auto text-red-500";
+                } else {
+                    okBtn.className = "flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-lg shadow-brand-500/20 transition-all";
+                    iconEl.setAttribute('data-lucide', 'info');
+                    iconContainer.className = "w-14 h-14 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4 mx-auto text-brand-500";
+                }
+
+                // Reiniciar listeners para evitar duplicados
+                const newCancel = cancelBtn.cloneNode(true);
+                const newOk = okBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                okBtn.parentNode.replaceChild(newOk, okBtn);
+
+                const close = (result) => {
+                    modal.classList.add('hidden');
+                    resolve(result);
+                };
+
+                newCancel.addEventListener('click', () => close(false));
+                newOk.addEventListener('click', () => close(true));
+
+                modal.classList.remove('hidden');
+                lucide.createIcons(); // Actualizar icono nuevo
+            });
+        };
 
         // --- APP LOGIC ---
         let currentUser = null;
@@ -707,7 +784,7 @@
         };
 
         window.deleteItem = async (id) => {
-            if(!confirm("¿Eliminar?")) return;
+            if(!(await showConfirm("¿Eliminar?", "Esta acción no se puede deshacer.", true, "Eliminar"))) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas', id);
                 await deleteDoc(docRef);
@@ -859,7 +936,7 @@
                     if (!Array.isArray(json)) json = json.manhwas || json.data || [json];
                     if (!Array.isArray(json)) throw new Error("Formato inválido");
                     
-                    if(!confirm(`¿Importar ${json.length} elementos?`)) return;
+                    if(!(await showConfirm("Importar Datos", `¿Importar ${json.length} elementos?`, false, "Importar"))) return;
                     
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     let count = 0;
