@@ -46,6 +46,9 @@
         .hide-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
         .hide-scroll::-webkit-scrollbar-track { background: transparent; }
         .hide-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        /* Padding safe area for iPhone X+ */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .fade-enter { animation: slideIn 0.3s ease-out forwards; }
@@ -78,7 +81,7 @@
         }
     </script>
 </head>
-<body class="bg-dark-900 text-slate-200 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-20 sm:pb-0">
+<body class="bg-dark-900 text-slate-200 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-24 sm:pb-0">
 
     <!-- Header -->
     <header class="glass-panel sticky top-0 z-50 border-b border-dark-700 shadow-lg shadow-black/20 backdrop-blur-xl">
@@ -97,25 +100,29 @@
                     <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Instalar App</span>
                 </button>
 
-                <!-- Botón de Autenticación (Google) -->
-                <button id="auth-btn" onclick="handleAuth()" class="flex items-center gap-2 bg-dark-800 hover:bg-dark-700 border border-dark-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
-                    <i data-lucide="log-in" class="w-4 h-4"></i> Acceder
-                </button>
-                
+                <!-- Botones Desktop (Ocultos en móvil) -->
+                <div class="hidden sm:flex items-center gap-4">
+                    <button id="auth-btn" onclick="handleAuth()" class="flex items-center gap-2 bg-dark-800 hover:bg-dark-700 border border-dark-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
+                        <i data-lucide="log-in" class="w-4 h-4"></i> Acceder
+                    </button>
+                    
+                    <div class="h-6 w-px bg-dark-700 mx-1"></div>
+
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar">
+                            <i data-lucide="upload" class="w-5 h-5"></i>
+                        </button>
+                        <!-- Aceptamos también .sql y .csv -->
+                        <input type="file" id="import-file" accept=".json,.sql,.csv,.txt" class="hidden" onclick="this.value=null" onchange="importData(this)">
+                        
+                        <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Backup">
+                            <i data-lucide="download" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Status oculto para lógica interna -->
                 <div id="user-status" class="hidden"></div>
-
-                <div class="flex gap-1 sm:gap-2">
-                    <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar">
-                        <i data-lucide="upload" class="w-5 h-5"></i>
-                    </button>
-                    <!-- Aceptamos también .sql y .csv -->
-                    <input type="file" id="import-file" accept=".json,.sql,.csv,.txt" class="hidden" onclick="this.value=null" onchange="importData(this)">
-                    
-                    <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Backup">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                    </button>
-                </div>
             </div>
         </div>
     </header>
@@ -194,9 +201,9 @@
                         </select>
                         <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
                     </div>
-                    <button onclick="window.openEditModal()" class="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
+                    <button onclick="window.openEditModal()" class="hidden sm:flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
                         <i data-lucide="plus" class="w-5 h-5"></i>
-                        <span class="hidden sm:inline">Nuevo</span>
+                        <span>Nuevo</span>
                     </button>
                 </div>
             </div>
@@ -232,14 +239,42 @@
         </div>
     </main>
 
-    <!-- Scroll Buttons Inteligentes -->
-    <div class="fixed bottom-6 left-6 z-[100] flex flex-col gap-2">
+    <!-- Bottom Navigation Bar (Mobile) -->
+    <nav class="fixed bottom-0 left-0 w-full bg-dark-900/95 backdrop-blur-xl border-t border-dark-700 z-[80] flex justify-between items-center px-6 py-3 sm:hidden pb-safe">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="text-[10px]">Inicio</span>
+        </button>
+        
+        <button onclick="document.getElementById('import-file').click()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i data-lucide="upload" class="w-5 h-5"></i>
+            <span class="text-[10px]">Importar</span>
+        </button>
+
+        <!-- Botón Central Flotante -->
+        <button onclick="openEditModal()" class="bg-brand-600 hover:bg-brand-500 text-white rounded-full p-4 -mt-8 border-4 border-dark-900 shadow-lg shadow-brand-500/30 flex items-center justify-center transform active:scale-95 transition-all">
+            <i data-lucide="plus" class="w-7 h-7"></i>
+        </button>
+
+        <button onclick="exportData()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i data-lucide="download" class="w-5 h-5"></i>
+            <span class="text-[10px]">Backup</span>
+        </button>
+
+        <button id="mobile-auth-btn" onclick="handleAuth()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[10px]">Perfil</span>
+        </button>
+    </nav>
+
+    <!-- Scroll Buttons Inteligentes (Izquierda) -->
+    <div class="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[100] flex flex-col gap-2 transition-all duration-300">
         <button id="scroll-up-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
-                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg">
+                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg backdrop-blur-md">
             <i data-lucide="arrow-up" class="w-5 h-5"></i>
         </button>
         <button id="scroll-down-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" 
-                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg">
+                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg backdrop-blur-md">
             <i data-lucide="arrow-down" class="w-5 h-5"></i>
         </button>
     </div>
@@ -264,100 +299,109 @@
         </div>
     </div>
 
-    <!-- MODAL REGISTRO (SIN AUTOR, GÉNEROS NI NOTAS) -->
+    <!-- MODAL REGISTRO (CON EFECTO BLUR) -->
     <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[90] hidden flex items-center justify-center sm:p-4 overflow-y-auto">
-        <div class="glass-panel bg-dark-900 sm:bg-dark-800 w-full sm:max-w-xl sm:rounded-2xl shadow-2xl border-0 sm:border border-dark-700 h-full sm:h-auto overflow-y-auto transform transition-all">
-            <div class="sticky top-0 z-10 px-4 py-4 border-b border-dark-700 flex justify-between items-center bg-dark-900/95 sm:bg-dark-800/95 backdrop-blur-md">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2" id="modal-title">
-                    <i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i>
-                    <span>Registrar</span>
-                </h2>
-                <button onclick="closeModal()" class="p-2 bg-dark-800 rounded-full text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
+        <div class="glass-panel bg-dark-900 sm:bg-dark-800 w-full sm:max-w-xl sm:rounded-2xl shadow-2xl border-0 sm:border border-dark-700 h-full sm:h-auto overflow-y-auto transform transition-all relative overflow-hidden">
             
-            <form id="add-form" class="p-4 sm:p-6 space-y-5 pb-20 sm:pb-6">
-                <input type="hidden" id="edit-id" value="">
+            <!-- FONDO BLUR DINÁMICO -->
+            <div class="absolute inset-0 z-0 pointer-events-none">
+                <img id="modal-bg-image" src="" class="w-full h-full object-cover blur-3xl opacity-0 transition-opacity duration-700">
+                <div class="absolute inset-0 bg-dark-900/90 sm:bg-dark-800/90"></div>
+            </div>
 
-                <!-- Título -->
-                <div>
-                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Título <span class="text-red-500">*</span></label>
-                    <input type="text" id="title" required class="form-input w-full rounded-xl px-4 py-3 text-base" placeholder="Ej: Solo Leveling">
+            <div class="relative z-10 flex flex-col h-full">
+                <div class="sticky top-0 z-20 px-4 py-4 border-b border-dark-700 flex justify-between items-center bg-transparent backdrop-blur-md">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2" id="modal-title">
+                        <i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i>
+                        <span>Registrar</span>
+                    </h2>
+                    <button onclick="closeModal()" class="p-2 bg-dark-800/50 rounded-full text-slate-400 hover:text-white transition-colors hover:bg-dark-700"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
+                
+                <form id="add-form" class="p-4 sm:p-6 space-y-5 pb-20 sm:pb-6">
+                    <input type="hidden" id="edit-id" value="">
 
-                <!-- URLs con botón de búsqueda -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Título -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL Portada</label>
-                        <div class="flex gap-2">
-                            <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-xl px-4 py-3 text-sm flex-grow" placeholder="https://...">
-                            <button type="button" onclick="searchCover()" class="p-3 bg-dark-800 border border-dark-700 hover:bg-dark-700 rounded-xl text-slate-400 hover:text-brand-400 transition-colors" title="Buscar en Google">
-                                <i data-lucide="search" class="w-5 h-5"></i>
-                            </button>
+                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Título <span class="text-red-500">*</span></label>
+                        <input type="text" id="title" required class="form-input w-full rounded-xl px-4 py-3 text-base" placeholder="Ej: Solo Leveling">
+                    </div>
+
+                    <!-- URLs con botón de búsqueda -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL Portada</label>
+                            <div class="flex gap-2">
+                                <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-xl px-4 py-3 text-sm flex-grow" placeholder="https://...">
+                                <button type="button" onclick="searchCover()" class="p-3 bg-dark-800 border border-dark-700 hover:bg-dark-700 rounded-xl text-slate-400 hover:text-brand-400 transition-colors" title="Buscar en Google">
+                                    <i data-lucide="search" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Link Lectura</label>
+                            <input type="url" id="readingUrl" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="https://...">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Link Lectura</label>
-                        <input type="url" id="readingUrl" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="https://...">
-                    </div>
-                </div>
 
-                <!-- Estado y Publicación -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Estado Lectura</label>
-                        <div class="relative">
-                            <select id="status" onchange="handleStatusChange(this.value)" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
-                                <option value="leyendo">Leyendo</option>
-                                <option value="pausado">Pausado</option>
-                                <option value="pendiente">Por Leer</option>
-                                <option value="completado">Completado</option>
-                                <option value="drop">Dropeado</option>
-                            </select>
-                            <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                    <!-- Estado y Publicación -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Estado Lectura</label>
+                            <div class="relative">
+                                <select id="status" onchange="handleStatusChange(this.value)" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
+                                    <option value="leyendo">Leyendo</option>
+                                    <option value="pausado">Pausado</option>
+                                    <option value="pendiente">Por Leer</option>
+                                    <option value="completado">Completado</option>
+                                    <option value="drop">Dropeado</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Publicación</label>
+                            <div class="relative">
+                                <select id="pubStatus" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
+                                    <option value="terminado">Terminado</option>
+                                    <option value="emision">En Emisión</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Publicación</label>
-                        <div class="relative">
-                            <select id="pubStatus" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
-                                <option value="terminado">Terminado</option>
-                                <option value="emision">En Emisión</option>
-                            </select>
-                            <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+
+                    <!-- Capítulos y Nota -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Cap. Actual</label>
+                            <input type="number" id="chapter" class="form-input w-full rounded-xl px-4 py-3 text-center font-mono text-lg" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total</label>
+                            <input type="number" id="totalChapters" class="form-input w-full rounded-xl px-4 py-3 text-center font-mono text-lg text-slate-400" placeholder="?">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Nota</label>
+                            <input type="number" id="rating" min="0" max="10" step="0.1" class="form-input w-full rounded-xl px-4 py-3 text-center" placeholder="0-10">
                         </div>
                     </div>
-                </div>
 
-                <!-- Capítulos y Nota -->
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Cap. Actual</label>
-                        <input type="number" id="chapter" class="form-input w-full rounded-xl px-4 py-3 text-center font-mono text-lg" placeholder="0">
+                    <!-- Vista Previa Imagen (REUBICADO AL FINAL) -->
+                    <div class="w-32 sm:w-40 mx-auto aspect-[2/3] bg-dark-900 rounded-lg overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative shadow-lg">
+                        <img id="image-preview" src="" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
+                        <div class="text-slate-600 flex flex-col items-center gap-2 text-center p-2" id="image-placeholder">
+                            <i data-lucide="image" class="w-6 h-6"></i>
+                            <span class="text-[10px] leading-tight">Vista previa</span>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total</label>
-                        <input type="number" id="totalChapters" class="form-input w-full rounded-xl px-4 py-3 text-center font-mono text-lg text-slate-400" placeholder="?">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Nota</label>
-                        <input type="number" id="rating" min="0" max="10" step="0.1" class="form-input w-full rounded-xl px-4 py-3 text-center" placeholder="0-10">
-                    </div>
-                </div>
 
-                <!-- Vista Previa Imagen (REUBICADO AL FINAL) -->
-                <div class="w-32 sm:w-40 mx-auto aspect-[2/3] bg-dark-900 rounded-lg overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative shadow-lg">
-                    <img id="image-preview" src="" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
-                    <div class="text-slate-600 flex flex-col items-center gap-2 text-center p-2" id="image-placeholder">
-                        <i data-lucide="image" class="w-6 h-6"></i>
-                        <span class="text-[10px] leading-tight">Vista previa</span>
+                    <div class="grid grid-cols-2 gap-3 pt-4 sm:border-t border-dark-700">
+                        <button type="button" onclick="closeModal()" class="px-5 py-3 rounded-xl text-sm text-slate-400 bg-dark-800 border border-dark-700 hover:text-white transition-colors font-medium">Cancelar</button>
+                        <button type="submit" class="px-6 py-3 rounded-xl text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20">Guardar</button>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 pt-4 sm:border-t border-dark-700">
-                    <button type="button" onclick="closeModal()" class="px-5 py-3 rounded-xl text-sm text-slate-400 bg-dark-800 border border-dark-700 hover:text-white transition-colors font-medium">Cancelar</button>
-                    <button type="submit" class="px-6 py-3 rounded-xl text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20">Guardar</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -600,7 +644,6 @@
                     </div>`;
                 }
 
-                // VISTA GRID
                 return `
                 <div class="glass-panel rounded-xl overflow-hidden group flex flex-col h-full hover:border-brand-500/50 hover:shadow-xl hover:shadow-brand-500/10 transition-all duration-300 relative fade-enter">
                     <div class="relative w-full aspect-[2/3] bg-dark-900 overflow-hidden cursor-pointer" onclick="window.openEditModal('${m.id}')">
@@ -746,6 +789,11 @@
             
             form.reset();
             window.updateImagePreview('');
+            
+            // Limpiar fondo
+            const bg = document.getElementById('modal-bg-image');
+            bg.src = '';
+            bg.classList.add('opacity-0');
 
             if (id) {
                 const item = allManhwas.find(m => m.id === id);
@@ -886,6 +934,7 @@
         async function initAuth() {
             const statusEl = document.getElementById('user-status');
             const authBtn = document.getElementById('auth-btn');
+            const mobileAuthBtn = document.getElementById('mobile-auth-btn');
             
             // Check for initial token provided by environment
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -903,11 +952,12 @@
                     currentUser = user;
                     if(statusEl) statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> <span class="text-slate-300">En línea</span>`;
                     
-                    if (user.isAnonymous) {
-                         authBtn.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> Anónimo`;
-                    } else {
-                         authBtn.innerHTML = `<img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+user.email}" class="w-5 h-5 rounded-full"> <span>Salir</span>`;
-                    }
+                    const avatar = user.photoURL || 'https://ui-avatars.com/api/?name='+user.email;
+                    const authHtml = `<img src="${avatar}" class="w-5 h-5 rounded-full"> <span>Salir</span>`;
+                    const mobileAuthHtml = `<img src="${avatar}" class="w-5 h-5 rounded-full mb-0.5"><span class="text-[10px]">Perfil</span>`;
+                    
+                    if(authBtn) authBtn.innerHTML = authHtml;
+                    if(mobileAuthBtn) mobileAuthBtn.innerHTML = mobileAuthHtml;
 
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     onSnapshot(colRef, (snapshot) => {
@@ -919,7 +969,10 @@
                     allManhwas = [];
                     processData();
                     if(statusEl) statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> <span class="text-slate-400">Offline</span>`;
-                    authBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> Acceder`;
+                    
+                    if(authBtn) authBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> Acceder`;
+                    if(mobileAuthBtn) mobileAuthBtn.innerHTML = `<i data-lucide="user" class="w-5 h-5"></i><span class="text-[10px]">Perfil</span>`;
+                    
                     lucide.createIcons();
                 }
             });
@@ -965,8 +1018,29 @@
         window.updateImagePreview = (url) => {
             const img = document.getElementById('image-preview');
             const holder = document.getElementById('image-placeholder');
-            if(url) { img.src = url; img.classList.remove('hidden'); holder.classList.add('hidden'); }
-            else { img.classList.add('hidden'); holder.classList.remove('hidden'); }
+            
+            // Actualizar también el fondo del modal si está abierto
+            const bg = document.getElementById('modal-bg-image');
+            
+            if(url) { 
+                img.src = url; 
+                img.classList.remove('hidden'); 
+                holder.classList.add('hidden'); 
+                
+                if(bg) {
+                    bg.src = url;
+                    bg.classList.remove('opacity-0');
+                }
+            }
+            else { 
+                img.classList.add('hidden'); 
+                holder.classList.remove('hidden'); 
+                
+                if(bg) {
+                    bg.src = '';
+                    bg.classList.add('opacity-0');
+                }
+            }
         };
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
         document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') window.closeModal(); });
@@ -1028,7 +1102,6 @@
                                 chapter: parseInt(item.capitulo_actual || item.chapter) || 0,
                                 totalChapters: parseInt(item.total_capitulos || item.totalChapters) || 0,
                                 readingUrl: item.url_lectura || item.readingUrl || '',
-                                // Eliminamos autor, genero y notas como pediste anteriormente
                                 isFavorite: isFav,
                                 createdAt: serverTimestamp(),
                                 updatedAt: serverTimestamp()
