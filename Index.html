@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BITAHCORA Ultimate</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BITAHCORA">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2232/2232688.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fuentes Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .form-input {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            border-color: #8b5cf6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .hide-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+        .hide-scroll::-webkit-scrollbar-track { background: transparent; }
+        .hide-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .fade-enter { animation: slideIn 0.3s ease-out forwards; }
+        
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-enter { animation: scaleIn 0.2s ease-out forwards; }
+
+        /* Clases para ocultar/mostrar flechas suavemente */
+        .scroll-btn {
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scroll-btn.hidden-btn {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#8b5cf6', 600: '#7c3aed' },
+                        dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-900 text-slate-200 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-20 sm:pb-0">
+
+    <!-- Header -->
+    <header class="glass-panel sticky top-0 z-50 border-b border-dark-700 shadow-lg shadow-black/20 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="bg-brand-600 p-1.5 sm:p-2 rounded-lg shadow-lg shadow-brand-500/20">
+                    <i data-lucide="book-open" class="text-white w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                    BITAHCORA
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-4">
+                <button id="install-btn" class="hidden flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-pink-500/20 transition-all animate-pulse">
+                    <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">App</span>
+                </button>
+
+                <div id="user-status" class="hidden sm:flex text-xs font-medium px-3 py-1.5 rounded-full bg-dark-800 border border-dark-700 items-center gap-2">
+                    <span class="animate-pulse w-2 h-2 rounded-full bg-yellow-500"></span>
+                    <span class="text-slate-400">Conectando...</span>
+                </div>
+
+                <div class="flex gap-1 sm:gap-2">
+                    <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar">
+                        <i data-lucide="upload" class="w-5 h-5"></i>
+                    </button>
+                    <input type="file" id="import-file" accept=".json" class="hidden" onclick="this.value=null" onchange="importData(this)">
+                    
+                    <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Backup">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-3 sm:px-4 py-6">
+        
+        <!-- DASHBOARD (2x2 Mobile) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-brand-500">
+                <div class="p-2 sm:p-3 bg-brand-500/10 rounded-lg text-brand-500"><i data-lucide="library" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                <div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Total</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-total">0</p>
+                </div>
+            </div>
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-green-500">
+                <div class="p-2 sm:p-3 bg-green-500/10 rounded-lg text-green-500"><i data-lucide="book-open-check" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                <div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Leyendo</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-reading">0</p>
+                </div>
+            </div>
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-blue-500">
+                <div class="p-2 sm:p-3 bg-blue-500/10 rounded-lg text-blue-500"><i data-lucide="check-circle-2" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                <div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Completados</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-completed">0</p>
+                </div>
+            </div>
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-yellow-500">
+                <div class="p-2 sm:p-3 bg-yellow-500/10 rounded-lg text-yellow-500"><i data-lucide="layers" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                <div>
+                    <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Caps. Leídos</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-chapters">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROLES -->
+        <div class="space-y-4 mb-6">
+            <div class="-mx-3 sm:mx-0 px-3 sm:px-0">
+                <div class="flex bg-dark-800/50 p-1 rounded-xl overflow-x-auto hide-scroll gap-1">
+                    <button onclick="filterStatus('all')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap shrink-0" data-filter="all">Todos</button>
+                    <button onclick="filterStatus('leyendo')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="leyendo">Leyendo</button>
+                    <button onclick="filterStatus('pausado')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="pausado">Pausados</button>
+                    <button onclick="filterStatus('completado')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="completado">Completados</button>
+                    <button onclick="filterStatus('pendiente')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="pendiente">Por Leer</button>
+                    <button onclick="filterStatus('drop')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="drop">Drop</button>
+                    <button onclick="filterStatus('favorites')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-pink-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1" data-filter="favorites">
+                        <i data-lucide="heart" class="w-3 h-3"></i> Favs
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex gap-2 w-full">
+                    <div class="relative flex-grow group">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-brand-500 transition-colors"></i>
+                        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar..." 
+                               class="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                    </div>
+                    <button onclick="toggleViewMode()" id="view-toggle-btn" class="p-2.5 bg-dark-800 border border-dark-700 rounded-xl text-slate-400 hover:text-white hover:bg-dark-700 transition-colors shrink-0">
+                        <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <div class="relative flex-grow sm:min-w-[180px]">
+                        <select id="sort-select" onchange="handleSort(this.value)" class="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand-500 appearance-none">
+                            <option value="updated_desc">Actualizado</option>
+                            <option value="recent_desc">Más Nuevos</option>
+                            <option value="rating_desc">Mejor Nota</option>
+                            <option value="chapter_desc">Más Caps</option>
+                            <option value="title_asc">A-Z</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                    </div>
+                    <button onclick="window.openEditModal()" class="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                        <span class="hidden sm:inline">Nuevo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR MANHWAS -->
+        <div id="manhwa-container" class="pb-24">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-xl aspect-[2/3] animate-pulse bg-dark-800"></div>
+                <div class="glass-panel rounded-xl aspect-[2/3] animate-pulse bg-dark-800"></div>
+            </div>
+        </div>
+
+        <!-- Estado Vacío -->
+        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-24 text-center">
+            <div class="bg-dark-800/50 p-6 rounded-full mb-4 border border-dark-700">
+                <i data-lucide="search-x" class="w-12 h-12 text-slate-600"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">Sin resultados</h3>
+            <p class="text-slate-500 text-sm max-w-[200px] mx-auto">Prueba otro filtro o agrega un nuevo manhwa.</p>
+            <button onclick="window.openEditModal()" class="mt-6 text-brand-400 hover:text-brand-300 text-sm font-medium">Agregar Nuevo</button>
+        </div>
+
+        <!-- Paginación -->
+        <div id="pagination-controls" class="flex justify-center items-center gap-4 mt-8 pb-8 hidden">
+            <button onclick="changePage(-1)" id="prev-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800 border border-dark-700 hover:bg-dark-700 disabled:opacity-30 disabled:cursor-not-allowed">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
+            <span class="text-slate-400 font-medium text-sm">Página <span id="current-page-display" class="text-white font-bold">1</span> de <span id="total-pages-display">1</span></span>
+            <button onclick="changePage(1)" id="next-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800 border border-dark-700 hover:bg-dark-700 disabled:opacity-30 disabled:cursor-not-allowed">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- Scroll Buttons Inteligentes -->
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col gap-2">
+        <button id="scroll-up-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg">
+            <i data-lucide="arrow-up" class="w-5 h-5"></i>
+        </button>
+        <button id="scroll-down-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" 
+                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg">
+            <i data-lucide="arrow-down" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toast-container" class="fixed top-4 right-4 sm:bottom-6 sm:top-auto sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none w-full max-w-[320px] px-4 sm:px-0"></div>
+
+    <!-- NUEVO MODAL DE CONFIRMACIÓN (Alerta Estilizada) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+        <div class="glass-panel bg-dark-800 w-full max-w-sm rounded-2xl shadow-2xl border border-dark-700 p-6 transform transition-all scale-100 modal-enter">
+            <div class="mb-5 text-center">
+                <div class="w-14 h-14 rounded-full bg-dark-700/50 border border-dark-600 flex items-center justify-center mb-4 mx-auto" id="confirm-icon-container">
+                    <i data-lucide="alert-triangle" class="w-7 h-7 text-white" id="confirm-icon"></i>
+                </div>
+                <h3 id="confirm-title" class="text-xl font-bold text-white mb-2">¿Estás seguro?</h3>
+                <p id="confirm-message" class="text-slate-400 text-sm leading-relaxed">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-300 bg-dark-700 hover:bg-dark-600 border border-dark-600 transition-colors">Cancelar</button>
+                <button id="confirm-ok" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20 transition-all">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRO -->
+    <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[90] hidden flex items-center justify-center sm:p-4 overflow-y-auto">
+        <div class="glass-panel bg-dark-900 sm:bg-dark-800 w-full sm:max-w-xl sm:rounded-2xl shadow-2xl border-0 sm:border border-dark-700 h-full sm:h-auto overflow-y-auto transform transition-all">
+            <div class="sticky top-0 z-10 px-4 py-4 border-b border-dark-700 flex justify-between items-center bg-dark-900/95 sm:bg-dark-800/95 backdrop-blur-md">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2" id="modal-title">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i>
+                    <span>Registrar</span>
+                </h2>
+                <button onclick="closeModal()" class="p-2 bg-dark-800 rounded-full text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form id="add-form" class="p-4 sm:p-6 space-y-5 pb-20 sm:pb-6">
+                <input type="hidden" id="edit-id" value="">
+
+                <!-- Título -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Título <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" required class="form-input w-full rounded-xl px-4 py-3 text-base" placeholder="Ej: Solo Leveling">
+                </div>
+
+                <!-- URLs -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL Portada</label>
+                        <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Link Lectura</label>
+                        <input type="url" id="readingUrl" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="https://...">
+                    </div>
+                </div>
+
+                <!-- Estado y Publicación -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Estado Lectura</label>
+                        <div class="relative">
+                            <select id="status" onchange="handleStatusChange(this.value)" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
+                                <option value="leyendo">Leyendo</option>
+                                <option value="pausado">Pausado</option>
+                                <option value="pendiente">Por Leer</option>
+                                <option value="completado">Completado</option>
+                                <option value="drop">Dropeado</opti
