@@ -17,21 +17,52 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Fuentes Google -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Confetti JS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Fuentes Google (Orbitron para Logo, Poppins para texto) -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         
+        /* --- FONDO ANIMADO (MESH GRADIENT) --- */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0f172a;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+        .orb-1 { width: 50vw; height: 50vw; background: #4c1d95; top: -10%; left: -10%; animation-delay: 0s; }
+        .orb-2 { width: 40vw; height: 40vw; background: #1e3a8a; bottom: -10%; right: -10%; animation-delay: -5s; }
+        .orb-3 { width: 30vw; height: 30vw; background: #be185d; top: 40%; left: 40%; animation-delay: -10s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
         .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
         
         .form-input {
-            background-color: #0f172a;
+            background-color: rgba(15, 23, 42, 0.8);
             border: 1px solid #334155;
             color: white;
             transition: all 0.2s;
@@ -46,27 +77,34 @@
         .hide-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
         .hide-scroll::-webkit-scrollbar-track { background: transparent; }
         .hide-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-
-        /* Padding safe area for iPhone X+ */
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .fade-enter { animation: slideIn 0.3s ease-out forwards; }
+        .fade-enter { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-enter { animation: scaleIn 0.2s ease-out forwards; }
 
-        /* Clases para ocultar/mostrar flechas suavemente */
         .scroll-btn {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
         .scroll-btn.hidden-btn {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(20px) scale(0.9);
             pointer-events: none;
         }
+
+        /* Efectos de Resplandor (Glow) */
+        .glow-green { box-shadow: 0 0 20px -5px rgba(34, 197, 94, 0.3); border-color: rgba(34, 197, 94, 0.3); }
+        .glow-blue { box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.3); border-color: rgba(59, 130, 246, 0.3); }
+        .glow-yellow { box-shadow: 0 0 20px -5px rgba(234, 179, 8, 0.3); border-color: rgba(234, 179, 8, 0.3); }
+        .glow-red { box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.3); border-color: rgba(239, 68, 68, 0.3); }
+        .glow-orange { box-shadow: 0 0 20px -5px rgba(249, 115, 22, 0.3); border-color: rgba(249, 115, 22, 0.3); }
+        .glow-base { box-shadow: 0 0 20px -5px rgba(255, 255, 255, 0.05); }
+
+        /* Gradientes de progreso */
+        .prog-grad { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
     </style>
     <script>
         tailwind.config = {
@@ -75,47 +113,57 @@
                     colors: {
                         brand: { 500: '#8b5cf6', 600: '#7c3aed' },
                         dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' }
+                    },
+                    fontFamily: {
+                        logo: ['Orbitron', 'sans-serif'],
+                        body: ['Poppins', 'sans-serif']
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-dark-900 text-slate-200 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-24 sm:pb-0">
+<body class="text-slate-200 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-24 sm:pb-0">
+
+    <!-- FONDO ANIMADO -->
+    <div class="animated-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
 
     <!-- Header -->
-    <header class="glass-panel sticky top-0 z-50 border-b border-dark-700 shadow-lg shadow-black/20 backdrop-blur-xl">
+    <header class="glass-panel sticky top-0 z-50 border-b border-white/10 shadow-lg shadow-black/20 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2 sm:gap-3">
-                <div class="bg-brand-600 p-1.5 sm:p-2 rounded-lg shadow-lg shadow-brand-500/20">
+                <div class="bg-gradient-to-br from-brand-500 to-purple-600 p-1.5 sm:p-2 rounded-lg shadow-lg shadow-brand-500/20">
                     <i data-lucide="book-open" class="text-white w-5 h-5 sm:w-6 sm:h-6"></i>
                 </div>
-                <h1 class="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                <h1 class="text-xl sm:text-2xl font-bold font-logo bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-slate-400 tracking-wide">
                     BITAHCORA
                 </h1>
             </div>
             
             <div class="flex items-center gap-2 sm:gap-4">
-                <button id="install-btn" class="hidden flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-pink-500/20 transition-all animate-pulse">
+                <button id="install-btn" class="hidden flex items-center gap-2 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-pink-500/20 transition-all animate-pulse">
                     <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Instalar App</span>
                 </button>
 
                 <!-- Botones Desktop (Ocultos en móvil) -->
                 <div class="hidden sm:flex items-center gap-4">
-                    <button id="auth-btn" onclick="handleAuth()" class="flex items-center gap-2 bg-dark-800 hover:bg-dark-700 border border-dark-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
+                    <button id="auth-btn" onclick="handleAuth()" class="flex items-center gap-2 bg-dark-800/50 hover:bg-dark-700/80 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
                         <i data-lucide="log-in" class="w-4 h-4"></i> Acceder
                     </button>
                     
-                    <div class="h-6 w-px bg-dark-700 mx-1"></div>
+                    <div class="h-6 w-px bg-white/10 mx-1"></div>
 
                     <div class="flex gap-2">
-                        <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Importar">
+                        <button onclick="document.getElementById('import-file').click()" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Importar">
                             <i data-lucide="upload" class="w-5 h-5"></i>
                         </button>
-                        <!-- Aceptamos también .sql y .csv -->
                         <input type="file" id="import-file" accept=".json,.sql,.csv,.txt" class="hidden" onclick="this.value=null" onchange="importData(this)">
                         
-                        <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors" title="Backup">
+                        <button onclick="exportData()" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Backup">
                             <i data-lucide="download" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -132,32 +180,32 @@
         
         <!-- DASHBOARD (2x2 Mobile) -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-brand-500">
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-brand-500 hover:bg-white/5 transition-colors">
                 <div class="p-2 sm:p-3 bg-brand-500/10 rounded-lg text-brand-500"><i data-lucide="library" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
                 <div>
                     <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Total</p>
-                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-total">0</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white font-logo" id="stat-total">0</p>
                 </div>
             </div>
-            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-green-500">
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-green-500 hover:bg-white/5 transition-colors">
                 <div class="p-2 sm:p-3 bg-green-500/10 rounded-lg text-green-500"><i data-lucide="book-open-check" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
                 <div>
                     <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Leyendo</p>
-                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-reading">0</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white font-logo" id="stat-reading">0</p>
                 </div>
             </div>
-            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-blue-500">
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-blue-500 hover:bg-white/5 transition-colors">
                 <div class="p-2 sm:p-3 bg-blue-500/10 rounded-lg text-blue-500"><i data-lucide="check-circle-2" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
                 <div>
                     <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Completados</p>
-                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-completed">0</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white font-logo" id="stat-completed">0</p>
                 </div>
             </div>
-            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-yellow-500">
+            <div class="glass-panel p-3 sm:p-4 rounded-xl flex items-center gap-3 border-l-4 border-yellow-500 hover:bg-white/5 transition-colors">
                 <div class="p-2 sm:p-3 bg-yellow-500/10 rounded-lg text-yellow-500"><i data-lucide="layers" class="w-5 h-5 sm:w-6 sm:h-6"></i></div>
                 <div>
                     <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Caps. Leídos</p>
-                    <p class="text-xl sm:text-2xl font-bold text-white" id="stat-chapters">0</p>
+                    <p class="text-xl sm:text-2xl font-bold text-white font-logo" id="stat-chapters">0</p>
                 </div>
             </div>
         </div>
@@ -165,7 +213,7 @@
         <!-- CONTROLES -->
         <div class="space-y-4 mb-6">
             <div class="-mx-3 sm:mx-0 px-3 sm:px-0">
-                <div class="flex bg-dark-800/50 p-1 rounded-xl overflow-x-auto hide-scroll gap-1">
+                <div class="flex bg-dark-800/40 p-1 rounded-xl overflow-x-auto hide-scroll gap-1 border border-white/5 backdrop-blur-md">
                     <button onclick="filterStatus('all')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-brand-600 text-white whitespace-nowrap shrink-0" data-filter="all">Todos</button>
                     <button onclick="filterStatus('leyendo')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="leyendo">Leyendo</button>
                     <button onclick="filterStatus('pausado')" class="filter-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap shrink-0" data-filter="pausado">Pausados</button>
@@ -183,16 +231,16 @@
                     <div class="relative flex-grow group">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-brand-500 transition-colors"></i>
                         <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar..." 
-                               class="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                               class="w-full bg-dark-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all backdrop-blur-sm">
                     </div>
-                    <button onclick="toggleViewMode()" id="view-toggle-btn" class="p-2.5 bg-dark-800 border border-dark-700 rounded-xl text-slate-400 hover:text-white hover:bg-dark-700 transition-colors shrink-0">
+                    <button onclick="toggleViewMode()" id="view-toggle-btn" class="p-2.5 bg-dark-800/60 border border-white/10 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0 backdrop-blur-sm">
                         <i data-lucide="layout-grid" class="w-5 h-5"></i>
                     </button>
                 </div>
 
                 <div class="flex gap-2 w-full sm:w-auto">
                     <div class="relative flex-grow sm:min-w-[180px]">
-                        <select id="sort-select" onchange="handleSort(this.value)" class="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand-500 appearance-none">
+                        <select id="sort-select" onchange="handleSort(this.value)" class="w-full bg-dark-800/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-brand-500 appearance-none backdrop-blur-sm">
                             <option value="updated_desc">Actualizado</option>
                             <option value="recent_desc">Más Nuevos</option>
                             <option value="rating_desc">Mejor Nota</option>
@@ -201,7 +249,7 @@
                         </select>
                         <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
                     </div>
-                    <button onclick="window.openEditModal()" class="hidden sm:flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
+                    <button onclick="window.openEditModal()" class="hidden sm:flex items-center justify-center gap-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-600 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all active:scale-95 shrink-0">
                         <i data-lucide="plus" class="w-5 h-5"></i>
                         <span>Nuevo</span>
                     </button>
@@ -212,15 +260,15 @@
         <!-- CONTENEDOR MANHWAS -->
         <div id="manhwa-container" class="pb-24">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="glass-panel rounded-xl aspect-[2/3] animate-pulse bg-dark-800"></div>
-                <div class="glass-panel rounded-xl aspect-[2/3] animate-pulse bg-dark-800"></div>
+                <div class="glass-panel rounded-xl aspect-[2/3] animate-pulse bg-white/5"></div>
+                <div class="glass-panel rounded-xl aspect-[2/3] animate-pulse bg-white/5"></div>
             </div>
         </div>
 
         <!-- Estado Vacío -->
         <div id="empty-state" class="hidden flex flex-col items-center justify-center py-24 text-center">
-            <div class="bg-dark-800/50 p-6 rounded-full mb-4 border border-dark-700">
-                <i data-lucide="search-x" class="w-12 h-12 text-slate-600"></i>
+            <div class="bg-white/5 p-6 rounded-full mb-4 border border-white/10 backdrop-blur-sm">
+                <i data-lucide="search-x" class="w-12 h-12 text-slate-500"></i>
             </div>
             <h3 class="text-xl font-semibold text-white mb-2">Sin resultados</h3>
             <p class="text-slate-500 text-sm max-w-[200px] mx-auto">Prueba otro filtro o agrega un nuevo manhwa.</p>
@@ -229,40 +277,40 @@
 
         <!-- Paginación -->
         <div id="pagination-controls" class="flex justify-center items-center gap-4 mt-8 pb-8 hidden">
-            <button onclick="changePage(-1)" id="prev-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800 border border-dark-700 hover:bg-dark-700 disabled:opacity-30 disabled:cursor-not-allowed">
+            <button onclick="changePage(-1)" id="prev-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800/60 border border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>
             </button>
             <span class="text-slate-400 font-medium text-sm">Página <span id="current-page-display" class="text-white font-bold">1</span> de <span id="total-pages-display">1</span></span>
-            <button onclick="changePage(1)" id="next-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800 border border-dark-700 hover:bg-dark-700 disabled:opacity-30 disabled:cursor-not-allowed">
+            <button onclick="changePage(1)" id="next-page" class="w-10 h-10 flex items-center justify-center rounded-lg bg-dark-800/60 border border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                 <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
         </div>
     </main>
 
     <!-- Bottom Navigation Bar (Mobile) -->
-    <nav class="fixed bottom-0 left-0 w-full bg-dark-900/95 backdrop-blur-xl border-t border-dark-700 z-[80] flex justify-between items-center px-6 py-3 sm:hidden pb-safe">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
-            <i data-lucide="home" class="w-5 h-5"></i>
+    <nav class="fixed bottom-0 left-0 w-full bg-dark-900/90 backdrop-blur-xl border-t border-white/10 z-[80] flex justify-between items-center px-6 py-3 sm:hidden pb-safe">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors group">
+            <i data-lucide="home" class="w-5 h-5 group-active:scale-90 transition-transform"></i>
             <span class="text-[10px]">Inicio</span>
         </button>
         
-        <button onclick="document.getElementById('import-file').click()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
-            <i data-lucide="upload" class="w-5 h-5"></i>
+        <button onclick="document.getElementById('import-file').click()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors group">
+            <i data-lucide="upload" class="w-5 h-5 group-active:scale-90 transition-transform"></i>
             <span class="text-[10px]">Importar</span>
         </button>
 
         <!-- Botón Central Flotante -->
-        <button onclick="openEditModal()" class="bg-brand-600 hover:bg-brand-500 text-white rounded-full p-4 -mt-8 border-4 border-dark-900 shadow-lg shadow-brand-500/30 flex items-center justify-center transform active:scale-95 transition-all">
+        <button onclick="openEditModal()" class="bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-full p-4 -mt-8 border-4 border-dark-900 shadow-lg shadow-brand-500/40 flex items-center justify-center transform active:scale-90 transition-all hover:scale-105">
             <i data-lucide="plus" class="w-7 h-7"></i>
         </button>
 
-        <button onclick="exportData()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
-            <i data-lucide="download" class="w-5 h-5"></i>
+        <button onclick="exportData()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors group">
+            <i data-lucide="download" class="w-5 h-5 group-active:scale-90 transition-transform"></i>
             <span class="text-[10px]">Backup</span>
         </button>
 
-        <button id="mobile-auth-btn" onclick="handleAuth()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors">
-            <i data-lucide="user" class="w-5 h-5"></i>
+        <button id="mobile-auth-btn" onclick="handleAuth()" class="text-slate-400 hover:text-white flex flex-col items-center gap-1 transition-colors group">
+            <i data-lucide="user" class="w-5 h-5 group-active:scale-90 transition-transform"></i>
             <span class="text-[10px]">Perfil</span>
         </button>
     </nav>
@@ -270,11 +318,11 @@
     <!-- Scroll Buttons Inteligentes (Izquierda) -->
     <div class="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[100] flex flex-col gap-2 transition-all duration-300">
         <button id="scroll-up-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
-                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg backdrop-blur-md">
+                class="scroll-btn hidden-btn p-3 bg-dark-800/80 border border-white/10 rounded-full text-slate-400 hover:text-white shadow-lg backdrop-blur-md active:scale-90">
             <i data-lucide="arrow-up" class="w-5 h-5"></i>
         </button>
         <button id="scroll-down-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" 
-                class="scroll-btn hidden-btn p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg backdrop-blur-md">
+                class="scroll-btn hidden-btn p-3 bg-dark-800/80 border border-white/10 rounded-full text-slate-400 hover:text-white shadow-lg backdrop-blur-md active:scale-90">
             <i data-lucide="arrow-down" class="w-5 h-5"></i>
         </button>
     </div>
@@ -284,38 +332,38 @@
 
     <!-- NUEVO MODAL DE CONFIRMACIÓN -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
-        <div class="glass-panel bg-dark-800 w-full max-w-sm rounded-2xl shadow-2xl border border-dark-700 p-6 transform transition-all scale-100 modal-enter">
+        <div class="glass-panel bg-dark-800 w-full max-w-sm rounded-2xl shadow-2xl border border-white/10 p-6 transform transition-all scale-100 modal-enter">
             <div class="mb-5 text-center">
-                <div class="w-14 h-14 rounded-full bg-dark-700/50 border border-dark-600 flex items-center justify-center mb-4 mx-auto" id="confirm-icon-container">
+                <div class="w-14 h-14 rounded-full bg-dark-700/50 border border-white/10 flex items-center justify-center mb-4 mx-auto" id="confirm-icon-container">
                     <i data-lucide="alert-triangle" class="w-7 h-7 text-white" id="confirm-icon"></i>
                 </div>
                 <h3 id="confirm-title" class="text-xl font-bold text-white mb-2">¿Estás seguro?</h3>
                 <p id="confirm-message" class="text-slate-400 text-sm leading-relaxed">Esta acción no se puede deshacer.</p>
             </div>
             <div class="flex gap-3">
-                <button id="confirm-cancel" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-300 bg-dark-700 hover:bg-dark-600 border border-dark-600 transition-colors">Cancelar</button>
+                <button id="confirm-cancel" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-300 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">Cancelar</button>
                 <button id="confirm-ok" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20 transition-all">Eliminar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL REGISTRO (CON EFECTO BLUR) -->
+    <!-- MODAL REGISTRO (CON EFECTO BLUR Y SIN CAMPOS EXTRA) -->
     <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[90] hidden flex items-center justify-center sm:p-4 overflow-y-auto">
-        <div class="glass-panel bg-dark-900 sm:bg-dark-800 w-full sm:max-w-xl sm:rounded-2xl shadow-2xl border-0 sm:border border-dark-700 h-full sm:h-auto overflow-y-auto transform transition-all relative overflow-hidden">
+        <div class="glass-panel bg-dark-900 sm:bg-dark-800 w-full sm:max-w-lg sm:rounded-2xl shadow-2xl border-0 sm:border border-white/10 h-full sm:h-auto overflow-y-auto transform transition-all relative overflow-hidden">
             
             <!-- FONDO BLUR DINÁMICO -->
             <div class="absolute inset-0 z-0 pointer-events-none">
                 <img id="modal-bg-image" src="" class="w-full h-full object-cover blur-3xl opacity-0 transition-opacity duration-700">
-                <div class="absolute inset-0 bg-dark-900/90 sm:bg-dark-800/90"></div>
+                <div class="absolute inset-0 bg-dark-900/95 sm:bg-dark-800/95"></div>
             </div>
 
             <div class="relative z-10 flex flex-col h-full">
-                <div class="sticky top-0 z-20 px-4 py-4 border-b border-dark-700 flex justify-between items-center bg-transparent backdrop-blur-md">
+                <div class="sticky top-0 z-20 px-4 py-4 border-b border-white/10 flex justify-between items-center bg-transparent backdrop-blur-md">
                     <h2 class="text-lg font-bold text-white flex items-center gap-2" id="modal-title">
                         <i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i>
                         <span>Registrar</span>
                     </h2>
-                    <button onclick="closeModal()" class="p-2 bg-dark-800/50 rounded-full text-slate-400 hover:text-white transition-colors hover:bg-dark-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    <button onclick="closeModal()" class="p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors hover:bg-white/10"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
                 
                 <form id="add-form" class="p-4 sm:p-6 space-y-5 pb-20 sm:pb-6">
@@ -333,7 +381,7 @@
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL Portada</label>
                             <div class="flex gap-2">
                                 <input type="url" id="coverUrl" oninput="updateImagePreview(this.value)" class="form-input w-full rounded-xl px-4 py-3 text-sm flex-grow" placeholder="https://...">
-                                <button type="button" onclick="searchCover()" class="p-3 bg-dark-800 border border-dark-700 hover:bg-dark-700 rounded-xl text-slate-400 hover:text-brand-400 transition-colors" title="Buscar en Google">
+                                <button type="button" onclick="searchCover()" class="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-slate-400 hover:text-brand-400 transition-colors" title="Buscar en Google">
                                     <i data-lucide="search" class="w-5 h-5"></i>
                                 </button>
                             </div>
@@ -388,7 +436,7 @@
                     </div>
 
                     <!-- Vista Previa Imagen (REUBICADO AL FINAL) -->
-                    <div class="w-32 sm:w-40 mx-auto aspect-[2/3] bg-dark-900 rounded-lg overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative shadow-lg">
+                    <div class="w-32 sm:w-40 mx-auto aspect-[2/3] bg-dark-900 rounded-lg overflow-hidden border border-dashed border-white/10 flex items-center justify-center group relative shadow-lg">
                         <img id="image-preview" src="" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
                         <div class="text-slate-600 flex flex-col items-center gap-2 text-center p-2" id="image-placeholder">
                             <i data-lucide="image" class="w-6 h-6"></i>
@@ -396,9 +444,9 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 pt-4 sm:border-t border-dark-700">
-                        <button type="button" onclick="closeModal()" class="px-5 py-3 rounded-xl text-sm text-slate-400 bg-dark-800 border border-dark-700 hover:text-white transition-colors font-medium">Cancelar</button>
-                        <button type="submit" class="px-6 py-3 rounded-xl text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20">Guardar</button>
+                    <div class="grid grid-cols-2 gap-3 pt-4 sm:border-t border-white/10">
+                        <button type="button" onclick="closeModal()" class="px-5 py-3 rounded-xl text-sm text-slate-400 bg-white/5 border border-white/10 hover:text-white transition-colors font-medium">Cancelar</button>
+                        <button type="submit" class="px-6 py-3 rounded-xl text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20 transform active:scale-95 transition-all">Guardar</button>
                     </div>
                 </form>
             </div>
@@ -475,7 +523,7 @@
                 msgEl.innerText = message;
                 okBtn.innerText = confirmText;
 
-                // Estilos dinámicos según tipo de alerta
+                // Estilos dinámicos
                 if (isDestructive) {
                     okBtn.className = "flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20 transition-all";
                     iconEl.setAttribute('data-lucide', 'alert-triangle');
@@ -486,7 +534,6 @@
                     iconContainer.className = "w-14 h-14 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4 mx-auto text-brand-500";
                 }
 
-                // Reiniciar listeners para evitar duplicados
                 const newCancel = cancelBtn.cloneNode(true);
                 const newOk = okBtn.cloneNode(true);
                 cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
@@ -501,7 +548,7 @@
                 newOk.addEventListener('click', () => close(true));
 
                 modal.classList.remove('hidden');
-                lucide.createIcons(); // Actualizar icono nuevo
+                lucide.createIcons();
             });
         };
 
@@ -550,13 +597,11 @@
             result.sort((a, b) => {
                 const dateUpA = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
                 const dateUpB = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
-                const dateCrA = a.createdAt?.seconds || 0;
-                const dateCrB = b.createdAt?.seconds || 0;
-
+                
                 switch(state.sort) {
                     case 'updated_desc': return dateUpB - dateUpA;
-                    case 'recent_desc': return dateCrB - dateCrA;
-                    case 'recent_asc': return dateCrA - dateCrB;
+                    case 'recent_desc': return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+                    case 'recent_asc': return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0);
                     case 'rating_desc': return (b.rating || 0) - (a.rating || 0);
                     case 'rating_asc': return (a.rating || 0) - (b.rating || 0);
                     case 'chapter_desc': return (b.chapter || 0) - (a.chapter || 0);
@@ -606,10 +651,18 @@
                 const pubBadge = isOngoing 
                     ? `<span class="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">Emisión</span>` 
                     : '';
+                
+                // Color Glow Dinámico
+                let glowClass = 'glow-base';
+                if(m.status === 'leyendo') glowClass = 'glow-green';
+                if(m.status === 'completado') glowClass = 'glow-blue';
+                if(m.status === 'pendiente') glowClass = 'glow-yellow';
+                if(m.status === 'drop') glowClass = 'glow-red';
+                if(m.status === 'pausado') glowClass = 'glow-orange';
 
                 if (state.viewMode === 'list') {
                     return `
-                    <div class="glass-panel p-3 rounded-xl flex gap-3 sm:gap-4 items-center relative group overflow-hidden fade-enter">
+                    <div class="glass-panel p-3 rounded-xl flex gap-3 sm:gap-4 items-center relative group overflow-hidden fade-enter hover:bg-white/5 transition-colors">
                         <div class="w-16 h-24 sm:w-20 sm:h-28 shrink-0 relative rounded-lg overflow-hidden bg-dark-900 cursor-pointer" onclick="openEditModal('${m.id}')">
                             <img src="${m.coverUrl || ''}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x150/1e293b/94a3b8?text=Img'">
                             ${m.isFavorite ? '<div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-500 shadow-md"></div>' : ''}
@@ -625,7 +678,7 @@
                                 </div>
                             </div>
                             <div class="w-full bg-dark-800 h-1.5 rounded-full overflow-hidden mb-2">
-                                <div class="bg-brand-500 h-full transition-all duration-500" style="width: ${percent}%"></div>
+                                <div class="prog-grad h-full transition-all duration-500" style="width: ${percent}%"></div>
                             </div>
                             <div class="flex items-center justify-between mt-auto">
                                 <span class="text-xs text-slate-500 font-mono">Cap. <span class="text-white font-bold">${current}</span>${total ? '/'+total : ''}</span>
@@ -635,7 +688,7 @@
                                         <i data-lucide="external-link" class="w-4 h-4"></i>
                                     </a>` : ''}
                                     <button onclick="${isCompleted ? '' : `window.updateChapter('${m.id}', ${current + 1}, ${total}, '${m.pubStatus}', '${m.status}')`}" 
-                                            class="p-1.5 rounded-lg transition-colors ${isCompleted ? 'bg-dark-700 text-slate-500 cursor-not-allowed' : 'bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white'}">
+                                            class="p-1.5 rounded-lg transition-colors ${isCompleted ? 'bg-dark-700 text-slate-500 cursor-not-allowed' : 'bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white active:scale-95'}">
                                         <i data-lucide="plus" class="w-4 h-4"></i>
                                     </button>
                                 </div>
@@ -644,8 +697,9 @@
                     </div>`;
                 }
 
+                // VISTA GRID
                 return `
-                <div class="glass-panel rounded-xl overflow-hidden group flex flex-col h-full hover:border-brand-500/50 hover:shadow-xl hover:shadow-brand-500/10 transition-all duration-300 relative fade-enter">
+                <div class="glass-panel rounded-xl overflow-hidden group flex flex-col h-full transition-all duration-300 relative fade-enter hover:scale-[1.02] ${glowClass}">
                     <div class="relative w-full aspect-[2/3] bg-dark-900 overflow-hidden cursor-pointer" onclick="window.openEditModal('${m.id}')">
                         <img src="${m.coverUrl || ''}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                              onerror="this.src='https://placehold.co/300x450/1e293b/94a3b8?text=Sin+Portada'">
@@ -663,11 +717,11 @@
 
                         ${m.readingUrl ? `
                         <a href="${m.readingUrl}" target="_blank" onclick="event.stopPropagation()"
-                           class="absolute bottom-12 right-2 p-2.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg z-20 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0" style="bottom: 12px;">
+                           class="absolute bottom-12 right-2 p-2.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg z-20 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 active:scale-95" style="bottom: 12px;">
                             <i data-lucide="book-open" class="w-4 h-4"></i>
                         </a>` : ''}
 
-                        ${total > 0 ? `<div class="absolute bottom-0 left-0 right-0 h-1 bg-dark-800/50"><div class="h-full bg-brand-500" style="width: ${percent}%"></div></div>` : ''}
+                        ${total > 0 ? `<div class="absolute bottom-0 left-0 right-0 h-1 bg-dark-800/50"><div class="prog-grad h-full" style="width: ${percent}%"></div></div>` : ''}
                     </div>
 
                     <div class="p-3 flex flex-col flex-grow relative bg-dark-800/50 border-t border-white/5">
@@ -687,17 +741,15 @@
                         </div>
 
                         <div class="mt-auto flex items-center justify-between gap-2 pointer-events-auto">
-                            <!-- Botón Eliminar (Solo Hover) -->
                             <button onclick="window.deleteItem('${m.id}')" class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             
-                            <!-- Contador de Capítulos -->
                             <div class="flex items-center bg-dark-900 rounded-lg border border-dark-700 shadow-sm overflow-hidden h-8 ml-auto">
-                                <button onclick="window.updateChapter('${m.id}', ${current - 1}, ${total}, '${m.pubStatus}', '${m.status}')" class="px-2.5 h-full text-slate-400 hover:text-white hover:bg-dark-700 border-r border-dark-700"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                <button onclick="window.updateChapter('${m.id}', ${current - 1}, ${total}, '${m.pubStatus}', '${m.status}')" class="px-2.5 h-full text-slate-400 hover:text-white hover:bg-dark-700 border-r border-dark-700 active:bg-dark-600"><i data-lucide="minus" class="w-3 h-3"></i></button>
                                 <div class="px-2 h-full flex items-center justify-center min-w-[36px]">
                                     <span class="text-xs font-bold text-white font-mono">${current}</span>
                                 </div>
                                 <button onclick="${isCompleted ? '' : `window.updateChapter('${m.id}', ${current + 1}, ${total}, '${m.pubStatus}', '${m.status}')`}" 
-                                        class="px-2.5 h-full ${isCompleted ? 'text-slate-600 cursor-not-allowed bg-dark-800' : 'text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700'}">
+                                        class="px-2.5 h-full ${isCompleted ? 'text-slate-600 cursor-not-allowed bg-dark-800' : 'text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700 active:scale-95'}">
                                     <i data-lucide="plus" class="w-3 h-3"></i>
                                 </button>
                             </div>
@@ -792,8 +844,7 @@
             
             // Limpiar fondo
             const bg = document.getElementById('modal-bg-image');
-            bg.src = '';
-            bg.classList.add('opacity-0');
+            if(bg) { bg.src = ''; bg.classList.add('opacity-0'); }
 
             if (id) {
                 const item = allManhwas.find(m => m.id === id);
@@ -848,7 +899,16 @@
             const isFinished = pubStatus !== 'emision';
             if (totalChapters > 0 && newChapter >= totalChapters && isFinished && currentStatus !== 'completado') {
                 updates.status = 'completado';
-                showToast('¡Completado!', 'success');
+                
+                // Efecto Confeti
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#8b5cf6', '#ec4899', '#3b82f6']
+                });
+                
+                showToast('¡Completado! 🎉', 'success');
             }
 
             if (currentStatus === 'completado' && newChapter < totalChapters) {
@@ -904,6 +964,9 @@
                     data.isFavorite = false;
                     await addDoc(colRef, data);
                     showToast('Registrado', 'success');
+                    
+                    // Confeti al crear
+                    confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
                 }
                 
                 closeModal();
@@ -936,15 +999,8 @@
             const authBtn = document.getElementById('auth-btn');
             const mobileAuthBtn = document.getElementById('mobile-auth-btn');
             
-            // Check for initial token provided by environment
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                  await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                 // Try anonymous fallback if Google Auth not actively used, 
-                 // or just wait for explicit user action. 
-                 // For now, we rely on user clicking "Acceder" or persisted session.
-                 // If we want auto-anonymous for testing:
-                 // await signInAnonymously(auth);
             }
 
             onAuthStateChanged(auth, (user) => {
@@ -988,9 +1044,6 @@
                 try {
                     await signInWithPopup(auth, googleProvider);
                 } catch (e) {
-                    console.error(e);
-                    // Fallback to anonymous for preview if google fails
-                    // await signInAnonymously(auth);
                     showToast('Error al iniciar sesión', 'error');
                 }
             }
@@ -1018,28 +1071,15 @@
         window.updateImagePreview = (url) => {
             const img = document.getElementById('image-preview');
             const holder = document.getElementById('image-placeholder');
-            
-            // Actualizar también el fondo del modal si está abierto
             const bg = document.getElementById('modal-bg-image');
             
             if(url) { 
-                img.src = url; 
-                img.classList.remove('hidden'); 
-                holder.classList.add('hidden'); 
-                
-                if(bg) {
-                    bg.src = url;
-                    bg.classList.remove('opacity-0');
-                }
+                img.src = url; img.classList.remove('hidden'); holder.classList.add('hidden'); 
+                if(bg) { bg.src = url; bg.classList.remove('opacity-0'); }
             }
             else { 
-                img.classList.add('hidden'); 
-                holder.classList.remove('hidden'); 
-                
-                if(bg) {
-                    bg.src = '';
-                    bg.classList.add('opacity-0');
-                }
+                img.classList.add('hidden'); holder.classList.remove('hidden'); 
+                if(bg) { bg.src = ''; bg.classList.add('opacity-0'); }
             }
         };
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
@@ -1064,17 +1104,10 @@
             reader.onload = async (e) => {
                 try {
                     let json = JSON.parse(e.target.result);
-
-                    // --- LÓGICA PARA DETECTAR FORMATO PHPMYADMIN ---
                     if (Array.isArray(json)) {
-                        // Buscamos el elemento que contiene los datos de la tabla
                         const phpMyAdminTable = json.find(item => item.type === "table" && Array.isArray(item.data));
-                        if (phpMyAdminTable) {
-                            json = phpMyAdminTable.data; // Extraemos la lista real de manhwas
-                        }
+                        if (phpMyAdminTable) json = phpMyAdminTable.data;
                     }
-                    // ------------------------------------------------
-
                     if (!Array.isArray(json)) json = json.manhwas || json.data || [json];
                     if (!Array.isArray(json)) throw new Error("Formato inválido");
                     
