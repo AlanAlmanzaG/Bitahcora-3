@@ -200,6 +200,12 @@
         </div>
     </main>
 
+    <!-- Scroll Buttons -->
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col gap-2 opacity-80 hover:opacity-100 transition-opacity">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg"><i data-lucide="arrow-up" class="w-5 h-5"></i></button>
+        <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="p-3 bg-dark-800 border border-dark-700 rounded-full text-slate-400 hover:text-white shadow-lg"><i data-lucide="arrow-down" class="w-5 h-5"></i></button>
+    </div>
+
     <!-- TOASTS -->
     <div id="toast-container" class="fixed top-4 right-4 sm:bottom-6 sm:top-auto sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none w-full max-w-[320px] px-4 sm:px-0"></div>
 
@@ -434,6 +440,7 @@
                 const percent = total > 0 ? Math.min((current / total) * 100, 100) : 0;
                 const st = getStatusDetails(m.status);
                 const lastUpdate = m.updatedAt ? new Date(m.updatedAt.seconds * 1000).toLocaleDateString() : 'Reciente';
+                const isCompleted = m.status === 'completado';
                 
                 const isOngoing = m.pubStatus === 'emision';
                 const pubBadge = isOngoing 
@@ -467,7 +474,8 @@
                                     <a href="${m.readingUrl}" target="_blank" class="p-1.5 text-brand-400 hover:text-white transition-colors" title="Leer">
                                         <i data-lucide="external-link" class="w-4 h-4"></i>
                                     </a>` : ''}
-                                    <button onclick="window.updateChapter('${m.id}', ${current + 1}, ${total}, '${m.pubStatus}', '${m.status}')" class="p-1.5 bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white rounded-lg transition-colors">
+                                    <button onclick="${isCompleted ? '' : `window.updateChapter('${m.id}', ${current + 1}, ${total}, '${m.pubStatus}', '${m.status}')`}" 
+                                            class="p-1.5 rounded-lg transition-colors ${isCompleted ? 'bg-dark-700 text-slate-500 cursor-not-allowed' : 'bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white'}">
                                         <i data-lucide="plus" class="w-4 h-4"></i>
                                     </button>
                                 </div>
@@ -529,7 +537,10 @@
                                 <div class="px-1.5 h-full flex items-center justify-center bg-dark-900/50 border-x border-dark-700 min-w-[30px]">
                                     <span class="text-xs font-bold text-white font-mono">${current}</span>
                                 </div>
-                                <button onclick="window.updateChapter('${m.id}', ${current + 1}, ${total}, '${m.pubStatus}', '${m.status}')" class="px-2 h-full text-white bg-brand-600 hover:bg-brand-500"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                <button onclick="${isCompleted ? '' : `window.updateChapter('${m.id}', ${current + 1}, ${total}, '${m.pubStatus}', '${m.status}')`}" 
+                                        class="px-2 h-full ${isCompleted ? 'text-slate-600 cursor-not-allowed' : 'text-white bg-brand-600 hover:bg-brand-500 active:bg-brand-700'}">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
