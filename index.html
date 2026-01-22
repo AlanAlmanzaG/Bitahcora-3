@@ -263,6 +263,18 @@
                     <input type="text" id="title" required class="form-input w-full rounded-xl px-4 py-3 text-base" placeholder="Ej: Solo Leveling">
                 </div>
 
+                <!-- Autor y Género -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Autor</label>
+                        <input type="text" id="autor" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="Ej: Chu-Gong">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Géneros</label>
+                        <input type="text" id="genero" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="Ej: Acción, Fantasía">
+                    </div>
+                </div>
+
                 <!-- URLs -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -272,15 +284,6 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Link Lectura</label>
                         <input type="url" id="readingUrl" class="form-input w-full rounded-xl px-4 py-3 text-sm" placeholder="https://...">
-                    </div>
-                </div>
-
-                <!-- Preview -->
-                <div class="w-full h-24 sm:h-32 bg-dark-900 rounded-xl overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative">
-                    <img id="image-preview" src="" class="w-full h-full object-cover hidden opacity-60" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
-                    <div class="text-slate-600 flex flex-col items-center gap-2 absolute inset-0 flex items-center justify-center pointer-events-none" id="image-placeholder">
-                        <i data-lucide="image" class="w-6 h-6"></i>
-                        <span class="text-xs">Vista previa</span>
                     </div>
                 </div>
 
@@ -324,6 +327,21 @@
                     <div>
                         <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Nota</label>
                         <input type="number" id="rating" min="0" max="10" step="0.1" class="form-input w-full rounded-xl px-4 py-3 text-center" placeholder="0-10">
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notas</label>
+                    <textarea id="notes" rows="2" class="form-input w-full rounded-xl px-4 py-3 resize-none text-sm" placeholder="Detalles extra..."></textarea>
+                </div>
+
+                <!-- Vista Previa Imagen (REUBICADO AL FINAL) -->
+                <div class="w-32 sm:w-40 mx-auto aspect-[2/3] bg-dark-900 rounded-lg overflow-hidden border border-dashed border-dark-700 flex items-center justify-center group relative shadow-lg">
+                    <img id="image-preview" src="" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
+                    <div class="text-slate-600 flex flex-col items-center gap-2 text-center p-2" id="image-placeholder">
+                        <i data-lucide="image" class="w-6 h-6"></i>
+                        <span class="text-[10px] leading-tight">Vista previa</span>
                     </div>
                 </div>
 
@@ -710,6 +728,8 @@
                 titleEl.innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-brand-500"></i><span>Editar</span>`;
                 
                 document.getElementById('title').value = item.title;
+                document.getElementById('autor').value = item.autor || '';
+                document.getElementById('genero').value = item.genero || '';
                 document.getElementById('coverUrl').value = item.coverUrl || '';
                 document.getElementById('readingUrl').value = item.readingUrl || '';
                 document.getElementById('status').value = item.status;
@@ -717,6 +737,7 @@
                 document.getElementById('rating').value = item.rating || '';
                 document.getElementById('chapter').value = item.chapter || 0;
                 document.getElementById('totalChapters').value = item.totalChapters || '';
+                document.getElementById('notes').value = item.notes || '';
                 
                 window.updateImagePreview(item.coverUrl);
             } else {
@@ -785,6 +806,8 @@
             const id = document.getElementById('edit-id').value;
             const data = {
                 title: document.getElementById('title').value,
+                autor: document.getElementById('autor').value,
+                genero: document.getElementById('genero').value,
                 coverUrl: document.getElementById('coverUrl').value,
                 readingUrl: document.getElementById('readingUrl').value,
                 status: document.getElementById('status').value,
@@ -792,6 +815,7 @@
                 rating: parseFloat(document.getElementById('rating').value) || 0,
                 chapter: parseInt(document.getElementById('chapter').value) || 0,
                 totalChapters: parseInt(document.getElementById('totalChapters').value) || 0,
+                notes: document.getElementById('notes').value,
                 updatedAt: serverTimestamp()
             };
 
@@ -941,7 +965,10 @@
                                 rating: parseFloat(item.calificacion || item.rating) || 0,
                                 chapter: parseInt(item.capitulo_actual || item.chapter) || 0,
                                 totalChapters: parseInt(item.total_capitulos || item.totalChapters) || 0,
+                                autor: item.autor || '',
+                                genero: item.genero || '',
                                 readingUrl: item.url_lectura || item.readingUrl || '',
+                                notes: item.notes || item.notes || '',
                                 isFavorite: isFav,
                                 createdAt: serverTimestamp(),
                                 updatedAt: serverTimestamp()
