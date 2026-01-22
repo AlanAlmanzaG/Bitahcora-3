@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ManhwaLog Ultimate</title>
+    <title>BITAHCORA Ultimate</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BITAHCORA">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2232/2232688.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Iconos Lucide -->
@@ -64,7 +73,7 @@
                     <i data-lucide="book-open" class="text-white w-5 h-5 sm:w-6 sm:h-6"></i>
                 </div>
                 <h1 class="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                    ManhwaLog
+                    BITAHCORA
                 </h1>
             </div>
             
@@ -268,11 +277,11 @@
                         <label class="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Estado Lectura</label>
                         <div class="relative">
                             <select id="status" onchange="handleStatusChange(this.value)" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
-                                <option value="leyendo">🟢 Leyendo</option>
-                                <option value="pausado">⏸️ Pausado</option>
-                                <option value="pendiente">🟡 Por Leer</option>
-                                <option value="completado">🔵 Completado</option>
-                                <option value="drop">🔴 Dropeado</option>
+                                <option value="leyendo">Leyendo</option>
+                                <option value="pausado">Pausado</option>
+                                <option value="pendiente">Por Leer</option>
+                                <option value="completado">Completado</option>
+                                <option value="drop">Dropeado</option>
                             </select>
                             <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
                         </div>
@@ -281,8 +290,8 @@
                         <label class="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Publicación</label>
                         <div class="relative">
                             <select id="pubStatus" class="form-input w-full rounded-xl px-4 py-3 appearance-none">
-                                <option value="terminado">📕 Terminado</option>
-                                <option value="emision">📡 En Emisión</option>
+                                <option value="terminado">Terminado</option>
+                                <option value="emision">En Emisión</option>
                             </select>
                             <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
                         </div>
@@ -349,9 +358,24 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ==========================================
-        // ESTADO GLOBAL
-        // ==========================================
+        // --- PWA INSTALLATION LOGIC ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            // installBtn.classList.remove('hidden'); // Opcional, botón custom
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.log('SW fallo:', err));
+            });
+        }
+
+        // --- APP LOGIC ---
         let currentUser = null;
         let allManhwas = [];
         let filteredManhwas = [];
@@ -363,10 +387,6 @@
             page: 1,
             itemsPerPage: 10
         };
-
-        // ==========================================
-        // LÓGICA DE RENDERIZADO
-        // ==========================================
 
         function processData() {
             let result = [...allManhwas];
@@ -441,7 +461,6 @@
                 const st = getStatusDetails(m.status);
                 const lastUpdate = m.updatedAt ? new Date(m.updatedAt.seconds * 1000).toLocaleDateString() : 'Reciente';
                 const isCompleted = m.status === 'completado';
-                
                 const isOngoing = m.pubStatus === 'emision';
                 const pubBadge = isOngoing 
                     ? `<span class="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">Emisión</span>` 
@@ -500,7 +519,6 @@
                             <i data-lucide="heart" class="w-3.5 h-3.5 ${m.isFavorite ? 'fill-pink-500 text-pink-500' : 'text-white group-hover/fav:text-pink-400'}"></i>
                         </button>
 
-                        <!-- Botón de Lectura FLOTANTE (Nuevo) -->
                         ${m.readingUrl ? `
                         <a href="${m.readingUrl}" target="_blank" onclick="event.stopPropagation()"
                            class="absolute bottom-2 right-2 p-2.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg z-20 hover:scale-110 transition-transform">
@@ -510,10 +528,8 @@
                         ${total > 0 ? `<div class="absolute bottom-0 left-0 right-0 h-1 bg-dark-800"><div class="h-full bg-brand-500" style="width: ${percent}%"></div></div>` : ''}
                     </div>
 
-                    <!-- Panel de Texto con MARGEN SUPERIOR AJUSTADO -->
                     <div class="p-3 pt-6 flex flex-col flex-grow relative -mt-4 z-10 pointer-events-none">
                         <div class="pointer-events-auto">
-                            <!-- Título -->
                             <div class="h-10 mb-2">
                                 <h3 class="text-sm font-bold text-white leading-tight line-clamp-2 hover:text-brand-400 cursor-pointer transition-colors drop-shadow-md" onclick="window.openEditModal('${m.id}')">
                                     ${m.title}
@@ -529,7 +545,6 @@
                             </div>
                         </div>
 
-                        <!-- Controles de Capítulos -->
                         <div class="mt-auto flex items-center justify-between gap-2 pointer-events-auto">
                             <button onclick="window.deleteItem('${m.id}')" class="p-1.5 text-slate-600 hover:text-red-400 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                             <div class="flex items-center bg-dark-800 rounded-lg border border-dark-700 shadow-sm overflow-hidden h-8">
@@ -658,7 +673,6 @@
             } catch (e) { showToast('Error al actualizar favorito', 'error'); }
         };
 
-        // LÓGICA AUTOMÁTICA DE ESTADO (ACTUALIZADA)
         window.updateChapter = async (id, newChapter, totalChapters, pubStatus, currentStatus) => {
             if (newChapter < 0) return;
             
@@ -667,25 +681,21 @@
                 updatedAt: serverTimestamp()
             };
             
-            // Regla: Emisión -> Actualizar Total si se supera
             if (pubStatus === 'emision' && newChapter > totalChapters) {
                 updates.totalChapters = newChapter;
             }
 
-            // Regla: Pendiente/Pausado -> Leyendo (Si sube cap)
             if ((currentStatus === 'pendiente' || currentStatus === 'pausado') && newChapter > 0) {
                 updates.status = 'leyendo';
                 showToast('Estado cambiado a Leyendo', 'success');
             }
 
-            // Regla: Leyendo -> Completado (Solo si NO es emisión)
             const isFinished = pubStatus !== 'emision';
             if (totalChapters > 0 && newChapter >= totalChapters && isFinished && currentStatus !== 'completado') {
                 updates.status = 'completado';
                 showToast('¡Completado!', 'success');
             }
 
-            // Regla: Completado -> Leyendo (Si baja caps)
             if (currentStatus === 'completado' && newChapter < totalChapters) {
                 updates.status = 'leyendo';
             }
@@ -750,7 +760,6 @@
             }
         });
 
-        // TOAST SYSTEM
         window.showToast = (msg, type = 'success') => {
             const container = document.getElementById('toast-container');
             const el = document.createElement('div');
@@ -769,7 +778,6 @@
             }, 3000);
         };
 
-        // --- AUTH & INIT ---
         async function initAuth() {
             const statusEl = document.getElementById('user-status');
             try {
@@ -803,7 +811,6 @@
 
         initAuth();
 
-        // UI HELPERS
         window.filterStatus = (s) => { 
             state.status = s; state.page = 1; 
             document.querySelectorAll('.filter-btn').forEach(btn => {
