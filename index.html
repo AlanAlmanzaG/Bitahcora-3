@@ -1030,50 +1030,98 @@
         };
 
         window.importData = (input) => {
-            if (!currentUser) return showToast("Conecta primero", 'error');
+            if (!currentUser) return showToast("Conecta primero para importar", 'error');
             const file = input.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    let json = JSON.parse(e.target.result);
+                    let json;
+                    try {
+                        json = JSON.parse(e.target.result);
+                    } catch (error) {
+                        return alert("Error en el archivo JSON: Verifica que no tenga comas al final o errores de sintaxis.\n\nTip: Usa jsonlint.com para validarlo.");
+                    }
+
+                    // Normalizar si es un objeto envuelto
                     if (!Array.isArray(json)) json = json.manhwas || json.data || [json];
-                    if (!Array.isArray(json)) throw new Error("Formato inválido");
                     
-                    if(!(await showConfirm("Importar Datos", `¿Importar ${json.length} elementos?`, false, "Importar"))) return;
+                    if (!Array.isArray(json)) throw new Error("El archivo no contiene una lista válida.");
+                    
+                    if(!(await showConfirm("Importar Respaldo", `Se encontraron ${json.length} manhwas.\n¿Deseas importarlos ahora?`, false, "Sí, Importar"))) return;
                     
                     const colRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'manhwas');
                     let count = 0;
+                    let errors = 0;
+
+                    showToast("Iniciando importación... espera un momento", 'success');
+
                     for (const item of json) {
-                        const title = item.titulo || item.title || item.nombre;
+                        // 1. MAPEO DE CAMPOS (Español JSON -> App)
+                        // Busca 'titulo' (tu json) O 'title' (backup app)
+                        const title = item.titulo || item.title || item.nombre || item.name;
+                        
                         if(title) {
-                            const isFav = item.is_favorite === "1" || item.is_favorite === 1 || item.isFavorite === true;
-                            const rawStatus = (item.estado || item.status || 'pendiente').toLowerCase();
+                            // Mapeo de imagen
+                            const coverUrl = item.imagen_url || item.coverUrl || item.img || '';
+                            
+                            // Mapeo de URL lectura
+                            const readingUrl = item.url_lectura || item.readingUrl || item.link || '';
+
+                            // Mapeo de Status (Tu JSON usa "Completado", "Pendiente")
+                            let rawStatus = (item.estado || item.status || 'pendiente').toLowerCase().trim();
                             let validStatus = 'pendiente';
                             if (rawStatus.includes('ley')) validStatus = 'leyendo';
                             else if (rawStatus.includes('pausa')) validStatus = 'pausado';
-                            else if (rawStatus.includes('comp') || rawStatus.includes('term')) validStatus = 'completado';
+                            else if (rawStatus.includes('comp') || rawStatus.includes('term') || rawStatus.includes('fin')) validStatus = 'completado';
                             else if (rawStatus.includes('drop') || rawStatus.includes('aband')) validStatus = 'drop';
 
-                            await addDoc(colRef, {
-                                title: String(title),
-                                coverUrl: item.imagen_url || item.coverUrl || '',
+                            // Mapeo de Favorito (Tu JSON usa "0" o "1")
+                            let isFav = false;
+                            if (item.is_favorite == "1" || item.is_favorite === 1 || item.isFavorite === true) isFav = true;
+
+                            // Mapeo de Números (Tu JSON los tiene como strings "73")
+                            const chapter = parseInt(item.capitulo_actual || item.chapter) || 0;
+                            const totalChapters = parseInt(item.total_capitulos || item.totalChapters) || 0;
+                            const rating = parseFloat(item.calificacion || item.rating) || 0;
+
+                            // Preparar objeto limpio
+                            const docData = {
+                                title: String(title).trim(),
+                                coverUrl: coverUrl,
+                                readingUrl: readingUrl,
                                 status: validStatus,
-                                pubStatus: item.pubStatus || 'terminado',
-                                rating: parseFloat(item.calificacion || item.rating) || 0,
-                                chapter: parseInt(item.capitulo_actual || item.chapter) || 0,
-                                totalChapters: parseInt(item.total_capitulos || item.totalChapters) || 0,
-                                readingUrl: item.url_lectura || item.readingUrl || '',
+                                pubStatus: 'terminado', // Por defecto asumimos terminado si no viene dato
+                                rating: rating,
+                                chapter: chapter,
+                                totalChapters: totalChapters,
                                 isFavorite: isFav,
                                 createdAt: serverTimestamp(),
                                 updatedAt: serverTimestamp()
-                            });
+                            };
+
+                            // Subir a Firebase
+                            await addDoc(colRef, docData);
                             count++;
+                        } else {
+                            console.warn("Elemento saltado por falta de título:", item);
+                            errors++;
                         }
                     }
-                    showToast(`${count} importados`, 'success');
-                } catch(err) { showToast("Error al importar", 'error'); }
-                input.value = '';
+                    
+                    if (count > 0) {
+                        showToast(`¡Éxito! ${count} importados.`, 'success');
+                        setTimeout(() => window.location.reload(), 1500); // Recargar para ver cambios
+                    } else {
+                        showToast("No se pudo importar ningún manhwa.", 'error');
+                    }
+                    
+                } catch(err) { 
+                    console.error(err);
+                    showToast("Error crítico al importar: " + err.message, 'error'); 
+                }
+                input.value = ''; // Limpiar input para permitir reintentar
             };
             reader.readAsText(file);
         };
